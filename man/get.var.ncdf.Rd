@@ -5,8 +5,7 @@
  Reads data from an existing netCDF file.  
 }
 \usage{
- get.var.ncdf( nc, varid=NA, start=NA, count=NA, isdimvar=FALSE, 
- 	verbose=FALSE ) 
+ get.var.ncdf( nc, varid=NA, start=NA, count=NA, verbose=FALSE, forcevarid=NA ) 
 }
 \arguments{
  \item{nc}{An object of class \code{ncdf} (as returned by either \code{open.ncdf()}
@@ -35,13 +34,10 @@
  NOT have an unlimited dimension, the entire variable is read.  
  As a special case, the value
  "-1" indicates that all entries along that dimension should be read.}
- \item{isdimvar}{This flag is used mostly by the package's internals.  It indicates
- that the integer value passed to argument 'varid' is actually a dimension's id,
- not a variable's id.  In this case, values from the coordinate variable will be
- read in.  If users want this functionality, they should instead pass the name
- of the dimension to the argument 'varid', rather than the id (but see the 
- caveats above, under the argument 'varid'.)}
  \item{verbose}{If TRUE, then progress information is printed.}
+ \item{forcevarid}{Internal use only.  This indicates
+ that the integer value passed in this argument is the actual variable ID to
+ use, and no interpretation of the 'varid' argument is done.}
 }
 \references{
  http://www.unidata.ucar.edu/packages/netcdf/
@@ -50,8 +46,12 @@
  This routine reads data values from a variable in a netCDF file.  The file
  must already have been opened with \code{\link[ncdf]{open.ncdf()}}.
 
- Returned values are always in ordinary R double precision, no matter what
- precision they are in the on-disk data file.
+ Returned values will be in ordinary R double precision if the netCDF 
+ variable type is float or double.
+ Returned values will be in R's integer storage mode if the netCDF 
+ variable type is short or int.
+ Returned values will be of character type if the netCDF variable is 
+ of character type.
 
  Values of "NA" are supported; values in the data file that match the
  variable's missing value attribute are automatically converted to "NA" before

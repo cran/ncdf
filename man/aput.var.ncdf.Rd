@@ -96,5 +96,27 @@ for( i in 1:nt)
 	put.var.ncdf( nc, var3d, data2d, start=c(1,1,i), count=c(-1,-1,1) )
 
 close.ncdf(nc)
+
+#----------------------------------------------------------------------
+# Illustrate creating a character type variable
+#----------------------------------------------------------------------
+cnames   <- c('red', 'orange', 'green', 'yellow', 'puce', 'colorwithverylongname' )
+nstrings <- length(cnames)
+
+#--------------------------------------------------------------
+# Make dimensions. Setting 'dimnchar' to have a length of 12
+# means that the maximum color name
+# length can be 12.  Longer names will be truncated to this.
+#--------------------------------------------------------------
+dimnchar   <- dim.def.ncdf('nchar',   '', 1:12 )
+dimcolorno <- dim.def.ncdf('colorno', '', 1:nstrings )
+
+varcolors  <- var.def.ncdf('colors', '', list(dimnchar, dimcolorno), NA, prec="char" )
+
+ncid <- create.ncdf( 'colornames.nc', list(varcolors) )
+
+put.var.ncdf( ncid, 'colors', cnames )
+
+close.ncdf( ncid )
 }
 \keyword{utilities}

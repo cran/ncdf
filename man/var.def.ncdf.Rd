@@ -14,7 +14,7 @@
  \item{dim}{The variable's dimension(s) (one or a list of "dim.netcdf" class objects).}
  \item{missval}{The variable's missing value.}
  \item{longname}{Optional longer name for the variable, which is assigned to the variables "long\_name" attribute. For example, a variable named "TS" might have the longname "Surface Temperature"}
- \item{prec}{Precision of the created variable.  Valid options: short integer single double.}
+ \item{prec}{Precision of the created variable.  Valid options: 'short' 'integer' 'single' 'double' 'char'.}
 }
 \value{
  An object of class \code{var.ncdf} that can later be passed to 

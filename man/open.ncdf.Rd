@@ -5,16 +5,17 @@
  Opens an existing netCDF file for reading (or, optionally, writing).
 }
 \usage{
- open.ncdf( con, write=FALSE, readunlim=TRUE, ... )
+ open.ncdf( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... )
 }
 \arguments{
  \item{con}{Name of the existing netCDF file to be opened.}
  \item{write}{If FALSE (default), then the file is opened read-only.  If TRUE, then writing to the file is allowed.}
- \item{...}{Arguments passed to or from other methods.}
  \item{readunlim}{When invoked, this function reads in the values of all dimensions from 
  the associated variables.  This can be slow for a large file with a long unlimited 
  dimension.  If set to FALSE, the values for the unlimited dimension are not 
  automatically read in (they can be read in later, manually, using \code{get.var.ncdf()}).}
+ \item{...}{Arguments passed to or from other methods.}
+ \item{verbose}{If TRUE, then messages are printed out during execution of this function.}
 }
 \value{
  An object of class \code{ncdf} that has the fields described below.

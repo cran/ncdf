@@ -14,6 +14,9 @@
 \alias{varid.inq.ncdf}
 \alias{varid.to.missing.value}
 \alias{varname.inq.ncdf}
+\alias{vartype.ncdf}
+\alias{vobjtodimid}
+\alias{vobjtodimname}
 \description{
  Internal udunits functions.
 }
