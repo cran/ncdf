@@ -1,0 +1,35 @@
+AC_INIT(R/load.R.in)
+
+: ${R_HOME=`R RHOME`}
+if test -z "${R_HOME}"; then
+        echo "Could not determine R_HOME"
+	exit 1
+fi
+CC=`${R_HOME}/bin/R CMD config CC`
+CFLAGS=`${R_HOME}/bin/R CMD config CFLAGS`
+
+AC_PATH_NETCDF
+
+foundnetcdf=false
+if test x$NETCDF_LIBDIR != x; then
+	if test x$$NETCDF_INCDIR != x; then
+		foundnetcdf=true
+	fi
+fi
+if test $foundnetcdf = false; then
+	echo "ERROR: I did not find the netcdf library or header file! Either install them"
+	echo "in the standard place (/usr/lib and /usr/include, or /usr/local/lib and "
+	echo "/usr/local/include), or edit the file netcdf_1.0/netcdf/src/Makevars.in"
+	echo "and put in the location where the package is installed."
+	exit -1
+fi
+HAVE_NETCDF=TRUE
+
+AC_SUBST(HAVE_NETCDF)
+AC_SUBST(NETCDF_INCDIR)
+AC_SUBST(NETCDF_LIBDIR)
+AC_SUBST(NETCDF_LIBNAME)
+
+AC_OUTPUT(R/load.R
+	src/Makevars)
+
