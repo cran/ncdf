@@ -236,7 +236,7 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, ... ) {
 		as.integer(rv$cmode),
 		id=as.integer(rv$id),
 		error=as.integer(rv$error),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( rv$error != 0 ) 
 		stop(paste("Error in open.ncdf trying to open file",con))
 
@@ -263,7 +263,7 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, ... ) {
 		natts=as.integer(rv$natts),
 		unlimdimid=as.integer(rv$unlimdimid),
 		error=as.integer(rv$error),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( rv$error != 0 ) 
 		stop(paste("R_nc_inq returned error on file",con,"!"))
 	nc$ndims        <- rv$ndims
@@ -449,7 +449,7 @@ create.ncdf <- function( filename, vars, verbose=FALSE ) {
 		as.integer(nc$cmode),
 		id=as.integer(nc$id),
 		error=as.integer(nc$error),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( nc$error != 0 )
 		stop("Error in create.ncdf!")
 	if( verbose )
@@ -551,7 +551,7 @@ create.ncdf <- function( filename, vars, verbose=FALSE ) {
 			as.integer(dimids-1),	# Change from R to C convention
 			id=as.integer(newvar$id),
 			error=as.integer(newvar$error),
-			package="ncdf")
+			PACKAGE="ncdf")
 		if( verbose )
 			print(paste("create.ncdf: C call returned value",newvar$error))
 		if( newvar$error != 0 ) 
@@ -615,7 +615,7 @@ dim.create.ncdf <- function( nc, d ) {
 		as.integer(sizetouse),
 		id=as.integer(ncdim$id),
 		error=as.integer(ncdim$error),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( ncdim$error != 0 ) 
 		stop("Error in dim.create.ncdf!")
 	ncdim$id <- ncdim$id + 1	# Change from C to R convention
@@ -634,7 +634,7 @@ dim.create.ncdf <- function( nc, d ) {
 			as.integer(ncdim$id-1),	# Change from R to C convention
 			id=as.integer(dimvar$id),
 			error=as.integer(dimvar$error),
-			package="ncdf")
+			PACKAGE="ncdf")
 		}
 	else
 		{
@@ -645,7 +645,7 @@ dim.create.ncdf <- function( nc, d ) {
 			as.integer(ncdim$id-1), # Change from R to C convention
 			id=as.integer(dimvar$id),
 			error=as.integer(dimvar$error),
-			package="ncdf")
+			PACKAGE="ncdf")
 		}
 	if( dimvar$error != 0 ) 
 		stop("Error defining dimvar in routine dim.create.ncdf")
@@ -669,7 +669,7 @@ dim.create.ncdf <- function( nc, d ) {
 				as.integer(count),
 				as.integer(d$vals),
 				error=as.integer(rv$error),
-				package="ncdf")
+				PACKAGE="ncdf")
 		else if( storage.mode(d$vals) == "double" ) 
 			rv <- .C("R_nc_put_vara_double",
 				as.integer(nc$id),
@@ -678,7 +678,7 @@ dim.create.ncdf <- function( nc, d ) {
 				as.integer(count),
 				as.double(d$vals),
 				error=as.integer(rv$error),
-				package="ncdf")
+				PACKAGE="ncdf")
 		else
 			stop(paste("dim.create.ncdf: unknown storage mode:",storage.mode(d$vals),"for dim",d$name))
 		if( rv$error != 0 )
@@ -733,7 +733,7 @@ att.get.ncdf <- function( nc, varid, attname ) {
 		type=as.integer(rv0$type), # 1=short 2=int 3=single 4=double 5=text
 		attlen=as.integer(rv0$attlen),
 		error=as.integer(rv0$error),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( rv0$error != 0 ) {
 		#---------------------------------------------------------
 		# This variable did NOT have an attribute named 'attname',
@@ -757,7 +757,7 @@ att.get.ncdf <- function( nc, varid, attname ) {
 			as.character(attname),
 			attribute=as.integer(rv$attribute),
 			error=as.integer(rv$error),
-			package="ncdf")
+			PACKAGE="ncdf")
 		}
 	else if( (rv0$type == 3) || (rv0$type == 4)) {
 		rv$attribute <- rep(0.0,rv0$attlen)
@@ -767,7 +767,7 @@ att.get.ncdf <- function( nc, varid, attname ) {
 			as.character(attname),
 			attribute=as.double(rv$attribute),
 			error=as.integer(rv$error),
-			package="ncdf")
+			PACKAGE="ncdf")
 		}
 	else if( rv0$type == 5 ) {
 		#------------------------------------------------------
@@ -782,7 +782,7 @@ att.get.ncdf <- function( nc, varid, attname ) {
 			as.character(attname),
 			attribute=as.character(rv$attribute),
 			error=as.integer(rv$error),
-			package="ncdf")
+			PACKAGE="ncdf")
 		}
 	else
 		stop("error, unhandled attribute type!")
@@ -917,7 +917,7 @@ att.put.ncdf <- function( nc, varid, attname, attval, prec=NA,
 		as.integer(length(attval)),
 		attval,
 		error=as.integer(rv$error),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( rv$error != 0 ) {
 		print(paste("Error in att.put.ncdf, while writing attribute",
 			attname,"with value",attval))
@@ -949,7 +949,7 @@ varname.inq.ncdf <- function( nc, varid ) {
 		as.integer(varid-1),	# Change from R to C convention
 		varname=as.character(rv$varname),
 		error=as.integer(rv$error),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( rv$error != 0 ) {
 		stop(paste("using ncid ",nc$id," varid ",varid))
 		}
@@ -1085,7 +1085,7 @@ var.inq.ncdf <- function( nc, varid ) {
 		natts=as.integer(rv$natts),
 		precint=as.integer(rv$precint),
 		error=as.integer(rv$error),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( rv$error != 0 )
 		stop("call to C function R_nc_inq_var failed")
 	
@@ -1160,7 +1160,7 @@ dim.inq.ncdf <- function( nc, dimid ) {
 		dimname=as.character(rv$dimname),
 		dimlen=as.integer(rv$dimlen),
 		error=as.integer(rv$error),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( rv$error != 0 ) {
 		stop(paste("using ncid ",nc$id," dimid ",dimid))
 		}
@@ -1195,7 +1195,7 @@ unlimdim.ncdf <- function( nc ) {
 		as.integer(nc$id),
 		unlimdimid=as.integer(rv$unlimdimid),
 		error=as.integer(rv$error),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( rv$error != 0 ) 
 		stop("unlimdim.ncdf returned error")
 
@@ -1299,10 +1299,10 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 		as.integer(varid-1),	# change from R to C convention
 		isunlim=as.integer(rv$isunlim),
 		error=as.integer(rv$error),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( rv$error != 0 ) 
 		stop("call to C function R_nc_inq_varunlim returned error")
-	if( is.na(start) && rv$isunlim ) {
+	if( (length(start)==1) && is.na(start) && rv$isunlim ) {
 		#------------------------------------------------
 		# OK, var is unlimited AND we have no start.  Put
 		# data into the next timestep.
@@ -1311,7 +1311,7 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 		start        <- rep(1,ndims)
 		start[ndims] <- ntnow + 1
 		}
-	if( is.na(count) && rv$isunlim ) {
+	if( (length(count)==1) && is.na(count) && rv$isunlim ) {
 		#-----------------------------------------------------
 		# In this case it is possible to have a wrong count
 		# calculated below, because count defaults to varsize,
@@ -1326,7 +1326,7 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 	#------------------------------
 	# Fix up start and count to use
 	#------------------------------
-	if( is.na(start) )
+	if( (length(start)==1) && is.na(start) )
 		start <- rep(1,ndims)	# Note: use R convention for now
 	else
 		{
@@ -1334,7 +1334,7 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 			stop(paste("'start' should specify",ndims,
 				"dims but actually specifies",length(start)))
 		}
-	if( is.na(count)) 
+	if( (length(count)==1) && is.na(count)) 
 		count <- varsize - start + 1	
 	else
 		{
@@ -1368,7 +1368,7 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 		as.integer(c.count),	# Already switched to C convention...
 		data=as.double(vals),
 		error=as.integer(rv$error),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( rv$error != 0 ) 
 		stop("C function R_nc_put_var_double returned error")
 }
@@ -1446,9 +1446,9 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, isdimvar=FALSE, verb
 	#------------------------------
 	# Fix up start and count to use
 	#------------------------------
-	if( is.na(start) )
+	if( (length(start)==1) && is.na(start) )
 		start <- rep(1,ndims)	# Note: use R convention for now
-	if( is.na(count)) 
+	if( (length(count)==1) && is.na(count)) 
 		count <- varsize - start + 1	
 	else
 		{
@@ -1487,7 +1487,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, isdimvar=FALSE, verb
 		as.integer(c.count),	# Already switched to C convention...
 		data=as.double(rv$data),
 		error=as.integer(rv$error),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( verbose )
 		print(paste("get.var.ncdf: C call returned",rv$error))
 	if( rv$error != 0 ) 
@@ -1553,7 +1553,7 @@ varsize.ncdf <- function( nc, varid ) {
 		as.integer(varid-1),	# Switch from R to C convention
 		varsize=as.integer(rv$varsize),
 		error=as.integer(rv$error),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( rv$error != 0 ) 
 		stop("error returned from C routine R_nc_varsize")
 
@@ -1577,7 +1577,7 @@ varndims.ncdf <- function( nc, varid ) {
 		as.integer(varid-1),	# Switch from R to C convention
 		ndims=as.integer(rv$ndims),
 		error=as.integer(rv$error),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( rv$error != 0 ) 
 		stop("error returned from C call")
 	return( rv$ndims )
@@ -1585,12 +1585,12 @@ varndims.ncdf <- function( nc, varid ) {
 
 #===============================================================
 sync.ncdf <- function( nc ) {
-	.C("R_nc_sync", as.integer(nc$id), package="ncdf")
+	.C("R_nc_sync", as.integer(nc$id), PACKAGE="ncdf")
 }
 
 #===============================================================
 redef.ncdf <- function( nc ) {
-	.C("R_nc_redef", as.integer(nc$id), package="ncdf")
+	.C("R_nc_redef", as.integer(nc$id), PACKAGE="ncdf")
 }
 
 #===============================================================
@@ -1604,7 +1604,7 @@ dimid.inq.ncdf <- function( nc, dimname ) {
 		as.integer(nc$id),
 		as.character(dimname),
 		dimid=as.integer(rv$dimid),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( rv$dimid != -1 )
 		rv$dimid <- rv$dimid + 1	# Switch from C to R convention
 	return(rv$dimid)
@@ -1621,7 +1621,7 @@ varid.inq.ncdf <- function( nc, varname ) {
 		as.integer(nc$id),
 		as.character(varname),
 		varid=as.integer(rv$varid),
-		package="ncdf")
+		PACKAGE="ncdf")
 	if( rv$varid != -1 )
 		rv$varid <- rv$varid + 1	# Switch from C to R convention
 	return(rv$varid)
@@ -1629,7 +1629,7 @@ varid.inq.ncdf <- function( nc, varname ) {
 
 #===============================================================
 enddef.ncdf <- function( nc ) {
-	.C("R_nc_enddef", as.integer(nc$id), package="ncdf")
+	.C("R_nc_enddef", as.integer(nc$id), PACKAGE="ncdf")
 	sync.ncdf( nc )
 }
 
@@ -1641,7 +1641,7 @@ varid.to.missing.value <- function( nc, varid ) {
 
 #===============================================================
 close.ncdf <- function( con, ... ) {
-	.C("R_nc_close", as.integer(con$id), package="ncdf")
+	.C("R_nc_close", as.integer(con$id), PACKAGE="ncdf")
 }
 
 #dyn.load("ncdf.so")

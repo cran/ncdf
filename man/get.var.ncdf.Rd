@@ -40,7 +40,7 @@
  not a variable's id.  In this case, values from the coordinate variable will be
  read in.  If users want this functionality, they should instead pass the name
  of the dimension to the argument 'varid', rather than the id (but see the 
- caveats above, under the argument 'varid'.}
+ caveats above, under the argument 'varid'.)}
  \item{verbose}{If TRUE, then progress information is printed.}
 }
 \references{
@@ -48,7 +48,7 @@
 }
 \details{
  This routine reads data values from a variable in a netCDF file.  The file
- must already have been opened with \code{\link[ncdf]{create.ncdf()}}.
+ must already have been opened with \code{\link[ncdf]{open.ncdf()}}.
 
  Returned values are always in ordinary R double precision, no matter what
  precision they are in the on-disk data file.
@@ -104,7 +104,7 @@ print(data2)
 # example we will elaborately show how to deal with a variable whose
 # shape is completely unknown (i.e., how many dimensions, and what their
 # sizes are).  We will also, for illustration of a common case, show how
-# to read in the file of the time dimension at each timestep.
+# to read in the values of the time dimension at each timestep.
 v3      <- nc$var[[3]]
 varsize <- v3$varsize
 ndims   <- v3$ndims

@@ -78,5 +78,12 @@ put.var.ncdf( ncnew, varPop, popAlabama, start=1, count=1 )
 att.put.ncdf( ncnew, 0, 'source', 'Census 2000 from census bureau web site')
 
 close.ncdf(ncnew)
+
+# Now open the file and read its data
+ncold <- open.ncdf("states_population.nc")
+data <- get.var.ncdf(ncold)
+print("here is the data in the file:")
+print(data)
+close.ncdf( ncold )
 }
 \keyword{utilities}
