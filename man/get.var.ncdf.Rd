@@ -5,11 +5,12 @@
  Reads data from an existing netCDF file.  
 }
 \usage{
- get.var.ncdf( nc, varid=NA, start=NA, count=NA, verbose=FALSE, forcevarid=NA ) 
+ get.var.ncdf(nc, varid=NA, start=NA, count=NA, verbose=FALSE, forcevarid=NA) 
 }
 \arguments{
- \item{nc}{An object of class \code{ncdf} (as returned by either \code{open.ncdf()}
- or \code{create.ncdf()}, indicating what file to read from.}
+ \item{nc}{An object of class \code{ncdf} (as returned by either 
+ function \code{open.ncdf()}
+ or function \code{create.ncdf()}, indicating what file to read from.}
  \item{varid}{What variable to read the data from.  Can be a string with the name
  of the variable, an object of class \code{var.ncdf}, or the "id" field of
  a \code{var.ncdf} object.  If left unspecified, the function will determine if there
@@ -108,13 +109,13 @@ print(data2)
 v3      <- nc$var[[3]]
 varsize <- v3$varsize
 ndims   <- v3$ndims
-nt      <- varsize[ndims]  # Remember timelike dimension is always the LAST dimension!
+nt      <- varsize[ndims]  # Remember timelike dim is always the LAST dimension!
 for( i in 1:nt ) {
 	# Initialize start and count to read one timestep of the variable.
 	start <- rep(1,ndims)	# begin with start=(1,1,1,...,1)
 	start[ndims] <- i	# change to start=(1,1,1,...,i) to read timestep i
 	count <- varsize	# begin w/count=(nx,ny,nz,...,nt), reads entire var
-	count[ndims] <- 1	# change to count=(nx,ny,nz,...,1) to read one timestep
+	count[ndims] <- 1	# change to count=(nx,ny,nz,...,1) to read 1 tstep
 	data3 <- get.var.ncdf( nc, v3, start=start, count=count )
 
 	# Now read in the value of the 'timelike' dimension

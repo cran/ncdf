@@ -8,8 +8,9 @@
  sync.ncdf( nc )
 }
 \arguments{
- \item{nc}{An object of class \code{ncdf} (as returned by either \code{open.ncdf()}
- or \code{create.ncdf()}, indicating what file to read from.}
+ \item{nc}{An object of class \code{ncdf} (as returned by either 
+ function \code{open.ncdf()}
+ or function \code{create.ncdf()}, indicating what file to read from.}
 }
 \references{
  http://www.unidata.ucar.edu/packages/netcdf/

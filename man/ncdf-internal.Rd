@@ -18,7 +18,7 @@
 \alias{vobjtodimid}
 \alias{vobjtodimname}
 \description{
- Internal udunits functions.
+ Internal ncdf functions.
 }
 \details{
  These are not to be called by the user.

@@ -9,8 +9,9 @@
  put.var.ncdf( nc, varid, vals, start=NA, count=NA, verbose=FALSE ) 
 }
 \arguments{
- \item{nc}{An object of class \code{ncdf} (as returned by either \code{open.ncdf()}
- or \code{create.ncdf()}), indicating what file to write to.}
+ \item{nc}{An object of class \code{ncdf} (as returned by either function
+ \code{open.ncdf()}
+ or function \code{create.ncdf()}), indicating what file to write to.}
  \item{varid}{What variable to write the data to.  Can be a string with the name
  of the variable, an object of class \code{var.ncdf}, or the "id" field of
  a \code{var.ncdf} object.}
@@ -111,7 +112,8 @@ nstrings <- length(cnames)
 dimnchar   <- dim.def.ncdf('nchar',   '', 1:12 )
 dimcolorno <- dim.def.ncdf('colorno', '', 1:nstrings )
 
-varcolors  <- var.def.ncdf('colors', '', list(dimnchar, dimcolorno), NA, prec="char" )
+varcolors  <- var.def.ncdf('colors', '', list(dimnchar, dimcolorno), 
+			NA, prec="char" )
 
 ncid <- create.ncdf( 'colornames.nc', list(varcolors) )
 

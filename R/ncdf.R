@@ -111,6 +111,10 @@ in.list.name.ncdf <- function( el, list ) {
 #	time <- ncdf.def.dim("time", "days since 1900-01-01", 0, unlim=T)
 #
 dim.def.ncdf <- function( name, units, vals, unlim=FALSE ) {
+
+	if( ! is.character(name) ) {
+		stop("Passed a dim name that is NOT a string of characters!")
+		}
 	dim <- list()
 	dim$name   <- name
 	dim$units  <- units
@@ -175,6 +179,10 @@ print.ncdf <- function( x, ... ) {
 # "double", and "char".
 #
 var.def.ncdf <- function( name, units, dim, missval, longname=name, prec="single" ) {
+
+	if( ! is.character(name) ) {
+		stop("Passed a var name that is NOT a string of characters!")
+		}
 
 	var <- list()
 	var$name     <- name
@@ -1155,13 +1163,20 @@ vobjtovarid <- function( nc, varid, verbose=FALSE, allowdimvar=TRUE) {
 			if(verbose)
 				print(paste("vobjtovarid: passed a var.ncdf class, name=",varid$name))
 			varid <- nc$var[[varid$name]]$id # Note we do NOT use varid$id in case var is from different file (but names are same)
+			varidOK <- ((varid>=0) && (varid<=100000))
+			if( is.na(varidOK) || (!varidOK))
+				stop("vobjtovarid: I was passed a var.ncdf object, BUT this object does NOT refer to any valid var in the netcdf file!")
+			
 			if(verbose)
-				print(paste("vobjtovarid: returning varid=",varid))
+				print(paste("vobjtovarid: returning varid=",varid,"  (OK=",varidOK,")"))
 			}
 		else if( allowdimvar && (class(varid) == "dim.ncdf") ) {
 			if(verbose)
 				print(paste("vobjtovarid: passed a dim.ncdf class, name=",varid$name))
 			varid <- nc$var[[varid$name]]$id # Note we do NOT use varid$id in case var is from different file (but names are same)
+			varidOK <- ((varid>=0) && (varid<=100000))
+			if( is.na(varidOK) || (!varidOK))
+				stop("vobjtovarid: I was passed a dim.ncdf object, BUT this object does NOT refer to any valid dimvar in the netcdf file!")
 			if(verbose)
 				print(paste("vobjtovarid: returning varid=",varid))
 			}
@@ -1443,7 +1458,10 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 		}
 	else
 		{
-		varid <- vobjtovarid( nc, varid )
+		if(verbose) print("put.var.ncdf: about to call vobjtovarid")
+		varid <- vobjtovarid( nc, varid, verbose=verbose )
+		if(verbose) print(paste("put.var.ncdf: vobjtovarid returned: >",
+					varid,"<"))
 		}
 
 	if( verbose )
