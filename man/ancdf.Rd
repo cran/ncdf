@@ -1,6 +1,6 @@
 \name{ncdf}
 \alias{ncdf}
-\title{Read, write, and create netCDF files}
+\title{Read, write, and create netCDF files (v1.4)}
 \description{
  Read from or write to existing netCDF format files, or create new ones.
 }
@@ -18,10 +18,7 @@
  netCDF library must already be installed on your machine for this R interface
  to the library to work.
 
- This package ("ncdf") is not compatible with the "netCDF" package by Thomas Lumley.
- On the other had, it implements considerably more functionality than the
- "netCDF" package, including creating and writing to netCDF files instead
- of simply reading from them.
+ This is version 1.4 of the ncdf library.
 }
 \seealso{ 
  \code{\link[ncdf]{att.put.ncdf}}, \code{\link[ncdf]{att.get.ncdf}},

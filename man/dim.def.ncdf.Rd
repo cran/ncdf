@@ -77,7 +77,7 @@ ncnew <- create.ncdf( "salinity.nc", salinity )
 
 close.ncdf(ncnew)
 
-# Now, illustrate some manipulations of the 'dim.ncdf' object.
+# Now, illustrate some manipulations of the dim.ncdf object.
 filename <- "salinity.nc"
 nc <- open.ncdf( filename )
 print(paste("File",filename,"contains",nc$ndims,"dimensions"))

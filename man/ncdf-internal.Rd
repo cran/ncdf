@@ -17,6 +17,7 @@
 \alias{vartype.ncdf}
 \alias{vobjtodimid}
 \alias{vobjtodimname}
+\alias{blankstring.ncdf}
 \description{
  Internal ncdf functions.
 }

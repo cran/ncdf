@@ -11,7 +11,6 @@
  \item{nc}{An object of class \code{ncdf} (as returned by either 
  function \code{open.ncdf()}
  or function \code{create.ncdf()}, indicating what file to read from.}
- \item{...}{Other arguments passed to or from other methods.}
 }
 \references{
  http://www.unidata.ucar.edu/packages/netcdf/
@@ -28,7 +27,7 @@
 }
 \examples{
 # This function is for advanced useage only, and will never
-# be needed by the typical user's R code.
+# be needed by the typical users R code.
 }
 \note{
  The typical user will never need this call, nor will ever have to worry about

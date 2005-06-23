@@ -57,7 +57,7 @@
 \author{David W. Pierce \email{dpierce@ucsd.edu}}
 \seealso{ 
  \code{\link[ncdf]{dim.def.ncdf}}, \code{\link[ncdf]{create.ncdf}}, 
- \code{\link[ncdf]{put.var.ncdf}}.
+ \code{\link[ncdf]{get.var.ncdf}}.
 }
 \examples{
 # Make a few dimensions we can use
@@ -91,7 +91,7 @@ put.var.ncdf( nc, var2d, data1d, start=c(1,2), count=c(nx,1) )
 # which equals nx in this case
 put.var.ncdf( nc, var2d, data1d, start=c(1,3), count=c(-1,1) )	
 
-# The 3-d variable has an unlimited dimension.  We'll loop over the timesteps,
+# The 3-d variable has an unlimited dimension.  We will loop over the timesteps,
 # writing one 2-d slice per timestep.
 for( i in 1:nt) 
 	put.var.ncdf( nc, var3d, data2d, start=c(1,1,i), count=c(-1,-1,1) )
@@ -101,23 +101,23 @@ close.ncdf(nc)
 #----------------------------------------------------------------------
 # Illustrate creating a character type variable
 #----------------------------------------------------------------------
-cnames   <- c('red', 'orange', 'green', 'yellow', 'puce', 'colorwithverylongname' )
+cnames   <- c("red", "orange", "green", "yellow", "puce", "colorwithverylongname" )
 nstrings <- length(cnames)
 
 #--------------------------------------------------------------
-# Make dimensions. Setting 'dimnchar' to have a length of 12
+# Make dimensions. Setting "dimnchar" to have a length of 12
 # means that the maximum color name
 # length can be 12.  Longer names will be truncated to this.
 #--------------------------------------------------------------
-dimnchar   <- dim.def.ncdf('nchar',   '', 1:12 )
-dimcolorno <- dim.def.ncdf('colorno', '', 1:nstrings )
+dimnchar   <- dim.def.ncdf("nchar",   "", 1:12 )
+dimcolorno <- dim.def.ncdf("colorno", "", 1:nstrings )
 
-varcolors  <- var.def.ncdf('colors', '', list(dimnchar, dimcolorno), 
+varcolors  <- var.def.ncdf("colors", "", list(dimnchar, dimcolorno), 
 			NA, prec="char" )
 
-ncid <- create.ncdf( 'colornames.nc', list(varcolors) )
+ncid <- create.ncdf( "colornames.nc", list(varcolors) )
 
-put.var.ncdf( ncid, 'colors', cnames )
+put.var.ncdf( ncid, "colors", cnames )
 
 close.ncdf( ncid )
 }

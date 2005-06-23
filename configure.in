@@ -12,7 +12,7 @@ AC_PATH_NETCDF
 
 foundnetcdf=false
 if test x$NETCDF_LIBDIR != x; then
-	if test x$$NETCDF_INCDIR != x; then
+	if test x$NETCDF_INCDIR != x; then
 		foundnetcdf=true
 	fi
 fi

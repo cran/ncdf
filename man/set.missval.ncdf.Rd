@@ -74,13 +74,13 @@ close.ncdf(nc)
 
 # Now, the actual data values in the netCDF file will be:
 # 10 2 999.9 1 7 999.9 8
-# and the variable's "missing_value" attributre will be 999.9
+# and the variables "missing_value" attributre will be 999.9
 
 # **NOTE** that we had to explicitly read in the data and write
 # it out again in order for the on-disk missing values in the
 # data array to change!  The on-disk missing_value attribute for
 # the variable is set automatically by this function, but it is 
-# up to you whether or not you want to read in all the file's 
+# up to you whether or not you want to read in all the files 
 # data and change the values to the new missing value.
 }
 \keyword{utilities}

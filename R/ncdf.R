@@ -66,12 +66,45 @@
 #	varsize : a convenience array that gives the (X,Y,Z,T) size of
 #		  the variable.
 #	prec    : The precision of the ON-DISK representation of the
-#		  variable.  Can be "short", "single", "double", "integer", or "char".
+#		  variable.  Can be "byte", "short", "float", "double", 
+#	    	  "integer", or "char".
 #
 # class: vals.ncdf (returned by get.var.ncdf)
 #	xvals, yvals, zvals, tvals: the dimensional values, as appropriate
 #	vals	: the data values
 #
+#=================================================================
+version.ncdf <- function() {
+	
+	return("1.4")
+
+}
+
+#=================================================================
+# Utility to return a streng of length 'n'; this is used for storage
+#
+blankstring.ncdf <- function( n ) {
+
+	s10  <- '          '
+	if( n <= 10 )
+		return(s10)
+
+	s100 <- paste(s10,s10,s10,s10,s10,s10,s10,s10,s10,s10)
+	if( n <= 100 )
+		return( s100 )
+
+	s1000 <- paste(s100,s100,s100,s100,s100,s100,s100,s100,s100,s100)
+	if( n <= 1000 )
+		return( s1000 )
+
+	n1000 <- as.integer(n/1000) + 1
+	stor <- ''
+	for( i in 1:n1000 )
+		stor <- paste(stor,s1000)
+
+	return(stor)
+}
+
 #=================================================================
 # This is where the default missing value for vars is set.
 #
@@ -192,6 +225,9 @@ var.def.ncdf <- function( name, units, dim, missval, longname=name, prec="single
 	var$id       <- -1
 	attr(var,"class") <- "var.ncdf"
 
+	if( prec == "float" )
+		prec <- 'single'
+
 	if( (prec != "short") && (prec != "single") && (prec != "double") && (prec != "integer") && (prec != "char"))
 		stop(paste("var.def.ncdf: error: unknown precision specified:",prec,". Known values: short single double integer char"))
 	var$prec <- prec
@@ -237,7 +273,7 @@ var.def.ncdf <- function( name, units, dim, missval, longname=name, prec="single
 open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 
 	if( verbose )
-		print("open.ncdf: enteirng")
+		print(paste("open.ncdf: entering, version=",version.ncdf()))
 
 	rv <- list()
 
@@ -296,11 +332,11 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 	# Get all the dimensions that this file has.
 	# Get their values as well (for caching).  
 	#-----------------------------------------------
-	if( verbose )
-		print("open.ncdf: getting dim info")
 	nc$dim   <- list()
 	dimnames <- character()
 	for( i in 1:nc$ndims ) {	
+		if( verbose )
+			print(paste("open.ncdf: getting dim info for dim number",i))
 		#-----------------------------------------------------------
 		# As a general note, the function dim.inq.ncdf does NOT
 		# return a full-fledged "dim.ncdf" object. It returns 
@@ -312,12 +348,16 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 		d          <- dim.inq.ncdf(nc,i)
 		d$id	   <- i
 		d$dimvarid <- varid.inq.ncdf(nc,d$name)
+		if( verbose )
+			print(paste("open.ncdf: dim name is",d$name,"  dimvarid=",d$dimvarid))
 		if( d$dimvarid == -1 ) {	# No dimvar for this dim
 			d$vals  <- as.double(1:d$len)
 			d$units <- ""
 			}
 		else {	
 			# This dim has a dimvar -- get its properties
+			if( verbose )
+				print(paste("open.ncdf: getting dimvar info for dim ",d$name))
 			attv <- att.get.ncdf( nc, d$dimvarid, "units" )
 			if( attv$hasatt )
 				d$units <- attv$value
@@ -327,10 +367,19 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 				d$vals <- rep(NA,d$len)
 			else			# Otherwise, read vals
 				d$vals <- get.var.ncdf( nc, forcevarid=d$dimvarid, verbose=verbose )
+			if( verbose )
+				{
+				print("------------------------------")
+				print("Here is new dim:")
+				print(d)
+				print("------------------------------")
+				}
 			}
 		attr(d,"class") <- "dim.ncdf"	# Is a complete dim.ncdf object now
 		nc$dim[[i]] <- d
 		dimnames[i] <- d$name
+		if( verbose )
+			print(paste("open.ncdf: done processing dim ",d$name))
 		}
 	attr(nc$dim,"names") <- dimnames
 	
@@ -340,13 +389,15 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 	# of vars!!
 	#-------------------------------------------
 	if( verbose )
-		print("open.ncdf: getting var info")
+		print(paste("open.ncdf: getting var info.  # vars (INCLUDING dimvars)=",rv$nvars))
 	nc$nvars <- 0
 	nc$var   <- list()
 	varnames <- character()
 	for( i in 1:rv$nvars ) {
 		name <- varname.inq.ncdf( nc, i )
 		if( dimid.inq.ncdf( nc, name ) == -1 ) {	# Only process if NOT a dimvar
+			if( verbose )
+				print(paste("open.ncdf: will process varid=",i,"  name=",name))
 			#--------------------------------------
 			# No dim with same name as this var, so
 			# this var must NOT be a dimvar.
@@ -403,6 +454,11 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 			nc$var[[nc$nvars]] <- v
 			nc$varid2Rindex[i] <- nc$nvars 
 			varnames <- append(varnames,v$name)
+			if( verbose ) {
+				print("-----------------------")
+				print("Here is new var:")
+				print(v)
+				}
 			}
 		}
 	attr(nc$var,"names") <- varnames
@@ -599,7 +655,7 @@ create.ncdf <- function( filename, vars, verbose=FALSE ) {
 			funcname <- "R_nc_def_var_int"
 		else if( v$prec == "short" )
 			funcname <- "R_nc_def_var_short"
-		else if( v$prec == "single" )
+		else if( (v$prec == "single" ) || (v$prec == "float"))
 			funcname <- "R_nc_def_var_float"
 		else if( v$prec == "double" )
 			funcname <- "R_nc_def_var_double"
@@ -791,6 +847,11 @@ dim.create.ncdf <- function( nc, d, verbose=FALSE ) {
 # value is returned.
 #
 att.get.ncdf <- function( nc, varid, attname ) {
+
+	verbose <- FALSE
+
+	if( verbose )
+		print(paste("att.get.ncdf: entering with varid=",varid," attname=",attname))
 	
 	if( class(nc) != "ncdf" ) 
 		stop("Error: the first argument to att.get.ncdf is not of class ncdf!")
@@ -831,6 +892,9 @@ att.get.ncdf <- function( nc, varid, attname ) {
 	rv$error     <- -1
 
 	if( (rv0$type == 1) || (rv0$type == 2)) {
+		#-------------
+		# Short or Int
+		#-------------
 		rv$attribute <- rep(as.integer(0),rv0$attlen)
 		rv <- .C("R_nc_get_att_int",
 			as.integer(nc$id),
@@ -841,6 +905,9 @@ att.get.ncdf <- function( nc, varid, attname ) {
 			PACKAGE="ncdf")
 		}
 	else if( (rv0$type == 3) || (rv0$type == 4)) {
+		#-----------------
+		# Single or Double
+		#-----------------
 		rv$attribute <- rep(0.0,rv0$attlen)
 		rv <- .C("R_nc_get_att_double",
 			as.integer(nc$id),
@@ -855,8 +922,7 @@ att.get.ncdf <- function( nc, varid, attname ) {
 		# This is a string NC_MAX_LEN long, to provide storage.
 		# I'm not sure if this is needed or not....
 		#------------------------------------------------------
-		str.nc.max.name <- "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678"
-		rv$attribute <- str.nc.max.name
+		rv$attribute <- blankstring.ncdf( rv0$attlen )
 		rv <- .C("R_nc_get_att_text",
 			as.integer(nc$id),
 			as.integer(varid-1),	# go from R to C convention
@@ -1632,8 +1698,15 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, forcevarid=NA ) {
 
 	if( verbose ) {
-		print("get.var.ncdf: entering. Here is varid:")
-		print(varid)
+		if( !is.na(forcevarid)) {
+			print("get.var.ncdf: entering with forcevarid set to:")
+			print(forcevarid)
+			}
+		else
+			{
+			print("get.var.ncdf: entering. Here is varid:")
+			print(varid)
+			}
 		}
 
 	if( class(nc) != "ncdf" )
@@ -1715,11 +1788,13 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, force
 		print("get.var.ncdf: count:")
 		print(count)
 		}
-	if( length(start) != ndims ) 
-		stop(paste("Error: variable has",ndims,"dims, but start has",length(start),"entries.  They must match!"))
-	if( length(count) != ndims ) 
-		stop(paste("Error: variable has",ndims,"dims, but count has",length(count),"entries.  They must match!"))
-		
+
+	if( ndims > 0 ) {
+		if( length(start) != ndims ) 
+			stop(paste("Error: variable has",ndims,"dims, but start has",length(start),"entries.  They must match!"))
+		if( length(count) != ndims ) 
+			stop(paste("Error: variable has",ndims,"dims, but count has",length(count),"entries.  They must match!"))
+		}
 
 	#----------------------------------------
 	# Need to know how much space to allocate
@@ -1755,7 +1830,8 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, force
 			as.integer(c.count),	# Already switched to C convention...
 			data=as.integer(rv$data),
 			error=as.integer(rv$error),
-			PACKAGE="ncdf")
+			PACKAGE="ncdf",
+			DUP=FALSE)
 		if( rv$error != 0 ) 
 			stop("C function R_nc_get_var_int returned error")
 		}
@@ -1771,7 +1847,8 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, force
 			as.integer(c.count),	# Already switched to C convention...
 			data=as.double(rv$data),
 			error=as.integer(rv$error),
-			PACKAGE="ncdf")
+			PACKAGE="ncdf",
+			DUP=FALSE)
 		if( rv$error != 0 ) 
 			stop("C function R_nc_get_vara_double returned error")
 		}
@@ -1791,16 +1868,8 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, force
 		#----------------------------------------------
 		# Make a character string of the specified size
 		#----------------------------------------------
-		s10  <- '          '
-		s100 <- paste(s10,s10,s10,s10,s10,s10,s10,s10,s10,s10)
-		n100 <- as.integer(totvarsize/100) + 1
-		n100sl <- as.integer(strlen/100) + 1
-		stor <- ''
-		stordata <- ''
-		for( i in 1:n100 )
-			stor <- paste(stor,s100)
-		for( i in 1:n100sl )
-			stordata <- paste(stordata,s100)
+		stor     <- blankstring.ncdf( totvarsize )
+		stordata <- blankstring.ncdf(strlen)
 		if( verbose )
 			print(paste("length of stor string:",nchar(stor)))
 		rv$tempstore <- stor
@@ -1874,7 +1943,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, force
 			if( ! is.na(mv) ) {
 				if( verbose )
 					print(paste("missval:",mv))
-				rv$data <- ifelse( rv$data==mv, NA, rv$data )
+				rv$data[rv$data==mv] <- NA
 				}
 			}
 		else if( (precint==3) || (precint==4)) {
@@ -1886,7 +1955,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, force
 				tol <- abs(mv*1.e-5)
 				if( verbose )
 					print(paste("missval:",mv,"  tol:",tol))
-				rv$data <- ifelse( (abs(rv$data-mv)<tol), NA, rv$data )
+				rv$data[abs(rv$data-mv)<tol] <- NA
 				}
 			}
 		}

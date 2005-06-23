@@ -94,7 +94,7 @@ popAlabama <- 4447100
 put.var.ncdf( ncnew, varPop, popAlabama, start=1, count=1 )
 
 # Add source info metadata to file
-att.put.ncdf( ncnew, 0, 'source', 'Census 2000 from census bureau web site')
+att.put.ncdf( ncnew, 0, "source", "Census 2000 from census bureau web site")
 
 close.ncdf(ncnew)
 

@@ -5,7 +5,8 @@
  Reads data from an existing netCDF file.  
 }
 \usage{
- get.var.ncdf(nc, varid=NA, start=NA, count=NA, verbose=FALSE, forcevarid=NA) 
+ get.var.ncdf(nc, varid=NA, start=NA, count=NA, verbose=FALSE,
+ forcevarid=NA) 
 }
 \arguments{
  \item{nc}{An object of class \code{ncdf} (as returned by either 
@@ -75,14 +76,14 @@
 # you can read the data as easily as this:
 #
 nc <- open.ncdf("salinity.nc")
-# NOTE how not specifying 'varid' reads the "only" var in the file
+# NOTE how not specifying varid reads the "only" var in the file
 data <- get.var.ncdf( nc )	
 close.ncdf(nc)
 
 # In this next example we read values from file "writevals.nc", which is created by
 # the R code in the example section for function "put.var.ncdf".  We open the
 # file with readunlim=FALSE for potentially faster access, and to illustrate
-# (below) how to read in the unlimited dimension's values.
+# (below) how to read in the unlimited dimension values.
 #
 nc <- open.ncdf( "writevals.nc", readunlim=FALSE )
 
@@ -118,7 +119,7 @@ for( i in 1:nt ) {
 	count[ndims] <- 1	# change to count=(nx,ny,nz,...,1) to read 1 tstep
 	data3 <- get.var.ncdf( nc, v3, start=start, count=count )
 
-	# Now read in the value of the 'timelike' dimension
+	# Now read in the value of the timelike dimension
 	timeval <- get.var.ncdf( nc, v3$dim[[ndims]]$name, start=i, count=1 )
 
 	print(paste("Data for variable",v3$name,"at timestep",i,

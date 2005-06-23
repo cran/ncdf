@@ -48,7 +48,7 @@ attvaldbl <- 3.1415926536
 att.put.ncdf( ncnew, var, "testatt_dbl", attvaldbl, prec="double" )
 attvalsingle <- c(1.0,4.0,9.0,16.0)
 att.put.ncdf( ncnew, var, "testatt_single", attvalsingle )
-# varid=0 means it's a global attribute
+# varid=0 means it is a global attribute
 att.put.ncdf( ncnew, 0, "globalatt_int", 32000, prec="int" ) 
 att.put.ncdf( ncnew, 0, "globalatt_short", 7, prec="short" )
 att.put.ncdf( ncnew, 0, "description", 

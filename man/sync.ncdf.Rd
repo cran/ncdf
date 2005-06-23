@@ -49,7 +49,7 @@ for( i in 1:nt ) {
 	timeval <- i*10
 	put.var.ncdf( nc, dimt, timeval, start=i, count=1 )
 
-	# Flush this timestep's data to the file so we don't lose it
+	# Flush this timesteps data to the file so we dont lose it
 	# if there is a crash or other problem
 	sync.ncdf( nc )
 	}
