@@ -6,7 +6,7 @@
 }
 \usage{
  get.var.ncdf(nc, varid=NA, start=NA, count=NA, verbose=FALSE,
- forcevarid=NA) 
+ signedbyte=TRUE, forcevarid=NA) 
 }
 \arguments{
  \item{nc}{An object of class \code{ncdf} (as returned by either 
@@ -37,6 +37,9 @@
  As a special case, the value
  "-1" indicates that all entries along that dimension should be read.}
  \item{verbose}{If TRUE, then progress information is printed.}
+ \item{signedbyte}{If TRUE (default), then on-disk byte variables are interpreted
+ as signed.  This is in accord with the netCDF standard.  If FALSE, then
+ on-disk byte variables are interpreted as unsigned.}
  \item{forcevarid}{Internal use only.  This indicates
  that the integer value passed in this argument is the actual variable ID to
  use, and no interpretation of the 'varid' argument is done.}
@@ -46,7 +49,7 @@
 }
 \details{
  This routine reads data values from a variable in a netCDF file.  The file
- must already have been opened with \code{\link[ncdf]{open.ncdf()}}.
+ must already have been opened with \code{\link[ncdf]{open.ncdf}}.
 
  Returned values will be in ordinary R double precision if the netCDF 
  variable type is float or double.
@@ -58,7 +61,7 @@
  Values of "NA" are supported; values in the data file that match the
  variable's missing value attribute are automatically converted to "NA" before
  being returned to the user.
- See \code{\link[ncdf]{set.missval.ncdf()}} for more information.
+ See \code{\link[ncdf]{set.missval.ncdf}} for more information.
 
  Data in a netCDF file is conceived as being a multi-dimensional array.
  The number and length of dimensions is determined when the variable is

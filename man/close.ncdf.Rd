@@ -22,7 +22,7 @@
 }
 \author{David W. Pierce \email{dpierce@ucsd.edu}}
 \seealso{ 
- \code{\link[ncdf]{sync.ncdf()}}.
+ \code{\link[ncdf]{sync.ncdf}}.
 }
 \examples{
 \dontrun{nc <- open.ncdf("salinity.nc")}

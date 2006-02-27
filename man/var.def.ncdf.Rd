@@ -57,7 +57,7 @@
  contents of the variable's "long\_name" attribute, or defaults to the name
  of the variable if there is no "long\_name" attribute; 5) ndims, which is the
  number of dimensions this variable has; 6) dim, which is a list of objects of
- class "dim.ncdf" (see \code{\link[ncdf]{dim.def.ncdf()}}), and describe this
+ class "dim.ncdf" (see \code{\link[ncdf]{dim.def.ncdf}}), and describe this
  variable's dimensions; 7) unlim, which is TRUE if this variable has an unlimited
  dimension and FALSE otherwise; 8) varsize, which is a convenience array
  that gives the shape of the variable (in XYZT ordering).

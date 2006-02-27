@@ -33,7 +33,7 @@
 
  For this to work, though, the user still has to specify a missing value
  for a variable.  Usually this is specified when the variable is created,
- as a required argument to \code{\link[ncdf]{var.def.ncdf()}}.
+ as a required argument to \code{\link[ncdf]{var.def.ncdf}}.
  However, sometimes it is useful to add (or change) a missing value for variable
  that already exists in a disk file.  This function enables that.
 }

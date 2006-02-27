@@ -76,7 +76,7 @@
 #=================================================================
 version.ncdf <- function() {
 	
-	return("1.4")
+	return("1.5")
 
 }
 
@@ -209,13 +209,22 @@ print.ncdf <- function( x, ... ) {
 # should have been made by "ncdf.def.dim", and so are of class
 # "dim.ncdf".   Argument "prec" will indicate what precision the variable
 # is made on the disk.  Allowed values are "short", "integer", "single", 
-# "double", and "char".
+# "double", "byte", and "char".
+# 'missval' is the value to be assigned to the 'missing_value' attribute
+# for the variable.  It should be a number representable in the precision-type
+# of the variable.  So, for example, for single precision, a floating point
+# number with magnitude less than 1.e36 should be used.  As a special value,
+# if missval is set to NA, then *no* missing value will be created for the 
+# variable.
 #
 var.def.ncdf <- function( name, units, dim, missval, longname=name, prec="single" ) {
 
 	if( ! is.character(name) ) {
 		stop("Passed a var name that is NOT a string of characters!")
 		}
+
+	if( storage.mode(missval) == "character" )
+		prec <- 'char'
 
 	var <- list()
 	var$name     <- name
@@ -228,8 +237,9 @@ var.def.ncdf <- function( name, units, dim, missval, longname=name, prec="single
 	if( prec == "float" )
 		prec <- 'single'
 
-	if( (prec != "short") && (prec != "single") && (prec != "double") && (prec != "integer") && (prec != "char"))
-		stop(paste("var.def.ncdf: error: unknown precision specified:",prec,". Known values: short single double integer char"))
+	if( (prec != "short")   && (prec != "single") && (prec != "double") && 
+	    (prec != "integer") && (prec != "char")   && (prec != "byte"))
+		stop(paste("var.def.ncdf: error: unknown precision specified:",prec,". Known values: short single double integer char byte"))
 	var$prec <- prec
 
 	#-----------------------------------------------------
@@ -526,6 +536,11 @@ print(paste("just set missval for var with index=",idx," and name=",v$name,"to",
 #
 create.ncdf <- function( filename, vars, verbose=FALSE ) {
 
+	if( ! is.character(filename))
+		stop("input filename must be a character string")
+	if( nchar(filename) < 1 )
+		stop("input filename must be at least 1 character long")
+
 	#---------------------------------------------------
 	# Have to tell if the input vars.orig is a single
 	# var or a list of vars.   Do it by examining 
@@ -661,8 +676,10 @@ create.ncdf <- function( filename, vars, verbose=FALSE ) {
 			funcname <- "R_nc_def_var_double"
 		else if( v$prec == "char" )
 			funcname <- "R_nc_def_var_char"
+		else if( v$prec == "byte" )
+			funcname <- "R_nc_def_var_byte"
 		else
-			stop(paste("internal error in create.ncdf: var has unknown precision:",v$prec,". Known vals: short single double integer char"))
+			stop(paste("internal error in create.ncdf: var has unknown precision:",v$prec,". Known vals: short single double integer char byte"))
 		newvar<-.C(funcname,
 			as.integer(nc$id),
 			v$name,
@@ -872,7 +889,7 @@ att.get.ncdf <- function( nc, varid, attname ) {
 		as.integer(nc$id),
 		as.integer(varid-1),	# Convert from R to C convention
 		as.character(attname),
-		type=as.integer(rv0$type), # 1=short 2=int 3=single 4=double 5=text
+		type=as.integer(rv0$type), # 1=short 2=int 3=single 4=double 5=text  6=byte
 		attlen=as.integer(rv0$attlen),
 		error=as.integer(rv0$error),
 		PACKAGE="ncdf")
@@ -891,10 +908,10 @@ att.get.ncdf <- function( nc, varid, attname ) {
 	rv <- list()
 	rv$error     <- -1
 
-	if( (rv0$type == 1) || (rv0$type == 2)) {
-		#-------------
-		# Short or Int
-		#-------------
+	if( (rv0$type == 1) || (rv0$type == 2) || (rv0$type == 6)) {
+		#--------------------
+		# Short, Int, or Byte
+		#--------------------
 		rv$attribute <- rep(as.integer(0),rv0$attlen)
 		rv <- .C("R_nc_get_att_int",
 			as.integer(nc$id),
@@ -1034,6 +1051,7 @@ att.put.ncdf <- function( nc, varid, attname, attval, prec=NA,
 	atttypeFloat <- 3
 	atttypeDbl   <- 4
 	atttypeText  <- 5
+	atttypeByte  <- 6
 	typetocreate <- -1
 	if( (length(prec)==1) && is.na(prec) ) {
 		if( global ) {
@@ -1066,6 +1084,8 @@ att.put.ncdf <- function( nc, varid, attname, attval, prec=NA,
 		typetocreate <- atttypeFloat
 	else if( prec == "short" )
 		typetocreate <- atttypeShort
+	else if( prec == "byte" )
+		typetocreate <- atttypeByte
 	else if( prec == "double" )
 		typetocreate <- atttypeDbl
 	else if( (prec == "integer" ) || (prec == "int"))
@@ -1176,6 +1196,7 @@ vobjtovarid <- function( nc, varid, verbose=FALSE, allowdimvar=TRUE) {
 		return( nc$var[[varToUse]]$id )
 		}
 
+	origvarid <- varid
 	if( ! is.numeric(varid) ) {
 		if( is.character(varid)) {	# we were given a variable's name
 			origvarid <- varid
@@ -1230,8 +1251,13 @@ vobjtovarid <- function( nc, varid, verbose=FALSE, allowdimvar=TRUE) {
 				print(paste("vobjtovarid: passed a var.ncdf class, name=",varid$name))
 			varid <- nc$var[[varid$name]]$id # Note we do NOT use varid$id in case var is from different file (but names are same)
 			varidOK <- ((varid>=0) && (varid<=100000))
-			if( is.na(varidOK) || (!varidOK))
-				stop("vobjtovarid: I was passed a var.ncdf object, BUT this object does NOT refer to any valid var in the netcdf file!")
+			if( is.na(varidOK) || (!varidOK)) {
+				print("vobjtovarid: I was passed a var.ncdf object, BUT this object does NOT refer to any valid var in the netcdf file!")
+				print(paste("This happened for netCDF filename:",nc$filename))
+				print(paste("The passed varid (which does NOT exist in that file) is:", origvarid))
+				print(paste("Hint: make SURE the variable was not only defined with a call to def.var.ncdf, but also included in the list passed to create.var.ncdf"))
+				stop("stopping")
+				}
 			
 			if(verbose)
 				print(paste("vobjtovarid: returning varid=",varid,"  (OK=",varidOK,")"))
@@ -1281,7 +1307,7 @@ var.inq.ncdf <- function( nc, varid ) {
 	rv$type    <- -1
 	rv$ndims   <- -1
 	rv$natts   <- -1
-	rv$precint <- -1 # INTEGER (not character) form of precision. 1=SHORT, 2=INT, 3=FLOAT, 4=DOUBLE, 5=CHAR.  Must match C code values!!
+	rv$precint <- -1 # INTEGER (not character) form of precision. 1=SHORT, 2=INT, 3=FLOAT, 4=DOUBLE, 5=CHAR 6=BYTE.  Must match C code values!!
 	rv$dimids  <- integer(varndims.ncdf( nc, varid ))
 	rv <- .C("R_nc_inq_var",
 		as.integer(nc$id),
@@ -1313,8 +1339,10 @@ var.inq.ncdf <- function( nc, varid ) {
 		var$prec <- "double"
 	else if( rv$precint == 5 )
 		var$prec <- "char"
+	else if( rv$precint == 6 )
+		var$prec <- "byte"
 	else
-		stop(paste("Error, unrecognized type code of variable returned from C call:",rv$precint,". I currently know about the following types: short int float double char."))
+		stop(paste("Error, unrecognized type code of variable returned from C call:",rv$precint,". I currently know about the following types: byte short int float double char."))
 
 	#---------------------------------------
 	# Convert dimids from C to R conventions
@@ -1575,9 +1603,9 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 		count[ndims] <- 1
 		}
 
-	#------------------------------
-	# Fix up start and count to use
-	#------------------------------
+	#--------------------------------------------------------
+	# Fix up start and count to use (in R convention for now)
+	#--------------------------------------------------------
 	if( (length(start)==1) && is.na(start) )
 		start <- rep(1,ndims)	# Note: use R convention for now
 	else
@@ -1616,23 +1644,23 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 	#---------------------------------
 	# Get the correct type of variable
 	#---------------------------------
-	precint <- vartype.ncdf( nc, varid ) # 1=short, 2=int, 3=float, 4=double, 5=char
+	precint <- vartype.ncdf( nc, varid ) # 1=short, 2=int, 3=float, 4=double, 5=char, 6=byte
 	if( verbose )
-		print(paste("Putting var of type",precint," (1=short, 2=int, 3=float, 4=double, 5=char)"))
+		print(paste("Putting var of type",precint," (1=short, 2=int, 3=float, 4=double, 5=char, 6=byte)"))
 
 	rv <- list()
 	rv$error <- -1
 
 	if( verbose ) {
-		print("put.var.ncdf: count=")
-		print(count)
-		print("start=")
-		print(start)
+		print("put.var.ncdf: calling C routines with C-style count=")
+		print(c.count)
+		print("and C-style start=")
+		print(c.start)
 		}
-	if( (precint == 1) || (precint == 2)) {
-		#-------------
-		# Short or Int
-		#-------------
+	if( (precint == 1) || (precint == 2) || (precint == 6)) {
+		#--------------------
+		# Short, Int, or Byte
+		#--------------------
 		rv <- .C("R_nc_put_vara_int", 
 			as.integer(nc$id),
 			as.integer(varid-1),	# Switch from R to C convention
@@ -1694,8 +1722,10 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 # to the start array).  Missing values in the source file (i.e.,
 # values that match that variable's 'missing_value' attribute)
 # are set to NA's.
+# Argument 'signedbyte' can be TRUE for bytes to be interpreted as 
+# signed, or FALSE to be unsigned.
 #
-get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, forcevarid=NA ) {
+get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signedbyte=TRUE, forcevarid=NA ) {
 
 	if( verbose ) {
 		if( !is.na(forcevarid)) {
@@ -1711,6 +1741,11 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, force
 
 	if( class(nc) != "ncdf" )
 		stop("first argument (nc) is not of class ncdf!")
+
+	if( signedbyte )
+		byte_style = 1	# 1=signed
+	else
+		byte_style = 2	# 2=unsigned
 
 	if( is.na(forcevarid) ) {
 		#-------------------------------------------------------------
@@ -1815,19 +1850,20 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, force
 	#---------------------------------
 	# Get the correct type of variable
 	#---------------------------------
-	precint <- vartype.ncdf( nc, varid ) # 1=short, 2=int, 3=float, 4=double, 5=char
+	precint <- vartype.ncdf( nc, varid ) # 1=short, 2=int, 3=float, 4=double, 5=char, 6=byte
 	if( verbose )
-		print(paste("Getting var of type",precint," (1=short, 2=int, 3=float, 4=double, 5=char)"))
-	if( (precint == 1) || (precint == 2)) {
-		#-------------
-		# Short or Int
-		#-------------
+		print(paste("Getting var of type",precint," (1=short, 2=int, 3=float, 4=double, 5=char, 6=byte)"))
+	if( (precint == 1) || (precint == 2) || (precint == 6)) {
+		#--------------------
+		# Short, Int, or Byte
+		#--------------------
 		rv$data  <- integer(totvarsize)
 		rv <- .C("R_nc_get_vara_int", 
 			as.integer(nc$id),
 			as.integer(varid-1),	# Switch from R to C convention
 			as.integer(c.start),	# Already switched to C convention...
 			as.integer(c.count),	# Already switched to C convention...
+			as.integer(byte_style), # 1=signed, 2=unsigned
 			data=as.integer(rv$data),
 			error=as.integer(rv$error),
 			PACKAGE="ncdf",
@@ -1936,9 +1972,9 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, force
 		if( verbose ) 
 			print("get.var.ncdf: setting missing values to NA")
 		if( (precint==1) || (precint==2)) {
-			#--------------
-			# Short and Int
-			#--------------
+			#---------------------
+			# Short, Int, and Byte
+			#---------------------
 			mv  <- nc$var[[ nc$varid2Rindex[varid] ]]$missval
 			if( ! is.na(mv) ) {
 				if( verbose )
@@ -2042,7 +2078,7 @@ varsize.ncdf <- function( nc, varid ) {
 #===============================================================
 # Internal use only.   Input: integer varid.  Output: one of the
 # integer R type codes (1=short, 2=int, 3=float, 4=double,
-# 5=char).
+# 5=char, 6=byte).
 #
 vartype.ncdf <- function( nc, varid ) {
 

@@ -23,7 +23,7 @@
 }
 \author{David W. Pierce \email{dpierce@ucsd.edu}}
 \seealso{ 
- \code{\link[ncdf]{redef.ncdf()}}.
+ \code{\link[ncdf]{redef.ncdf}}.
 }
 \examples{
 # This function is for advanced useage only, and will never

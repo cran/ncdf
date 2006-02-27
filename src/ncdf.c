@@ -6,11 +6,12 @@
 #include <Rdefines.h>
 
 /* These same values are hard-coded into the R source. Don't change them! */
-#define R_NC_TYPE_SHORT 1
-#define R_NC_TYPE_INT   2
-#define R_NC_TYPE_FLOAT 3
+#define R_NC_TYPE_SHORT  1
+#define R_NC_TYPE_INT    2
+#define R_NC_TYPE_FLOAT  3
 #define R_NC_TYPE_DOUBLE 4
-#define R_NC_TYPE_TEXT  5
+#define R_NC_TYPE_TEXT   5
+#define R_NC_TYPE_BYTE   6
 
 /*********************************************************************
  * Converts from type "nc_type" to an integer as defined in the beginning 
@@ -30,6 +31,8 @@ int R_nc_nctype_to_Rtypecode( nc_type nct )
 		return(R_NC_TYPE_FLOAT);
 	else if( nct == NC_DOUBLE )
 		return(R_NC_TYPE_DOUBLE);
+	else if( nct == NC_BYTE )
+		return(R_NC_TYPE_BYTE);
 	else
 		return(-1);
 }
@@ -78,7 +81,7 @@ void R_nc_varsize( int *ncid, int *varid, int *varsize, int *retval )
 /* Returns 1 if this var has an unlimited dimension, 0 otherwise */
 void R_nc_inq_varunlim( int *ncid, int *varid, int *isunlim, int *retval )
 {
-	int	i, ndims, unlimdimid, dimids[MAX_NC_DIMS], nvars, err;
+	int	i, ndims, unlimdimid, dimids[MAX_NC_DIMS];
 
 	/* Get the unlimited dim id */
 	*retval = nc_inq_unlimdim( *ncid, &unlimdimid );
@@ -190,13 +193,13 @@ void R_nc_get_vara_double( int *ncid, int *varid, int *start,
 			nc_strerror(*retval) );
 		fprintf( stderr, "Var: %s  Ndims: %d   Start: ", vn, ndims );
 		for( i=0; i<ndims; i++ ) {
-			fprintf( stderr, "%ld", s_start[i] );
+			fprintf( stderr, "%u", s_start[i] );
 			if( i < ndims-1 )
 				fprintf( stderr, "," );
 			}
 		fprintf( stderr, "Count: " );
 		for( i=0; i<ndims; i++ ) {
-			fprintf( stderr, "%ld", s_count[i] );
+			fprintf( stderr, "%u", s_count[i] );
 			if( i < ndims-1 )
 				fprintf( stderr, "," );
 			}
@@ -204,21 +207,26 @@ void R_nc_get_vara_double( int *ncid, int *varid, int *start,
 }
 
 /*********************************************************************/
+/* byte_style is 1 for signed, 2 for unsigned
+ */
 void R_nc_get_vara_int( int *ncid, int *varid, int *start, 
-	int *count, int *data, int *retval )
+	int *count, int *byte_style, int *data, int *retval )
 {
 	int	i, err, ndims;
-	size_t	s_start[MAX_NC_DIMS], s_count[MAX_NC_DIMS];
+	size_t	s_start[MAX_NC_DIMS], s_count[MAX_NC_DIMS], tot_size, k;
 	char	vn[2048];
+	nc_type	nct;
 
 	err = nc_inq_varndims(*ncid, *varid, &ndims );
 	if( err != NC_NOERR ) 
 		fprintf( stderr, "Error in R_nc_get_vara_int while getting ndims: %s\n", 
 			nc_strerror(*retval) );
 
+	tot_size = 1L;
 	for( i=0; i<ndims; i++ ) {
 		s_start[i] = (size_t)start[i];
 		s_count[i] = (size_t)count[i];
+		tot_size *= s_count[i];
 		}
 		
 	*retval = nc_get_vara_int(*ncid, *varid, s_start, s_count, data );
@@ -228,15 +236,29 @@ void R_nc_get_vara_int( int *ncid, int *varid, int *start,
 			nc_strerror(*retval) );
 		fprintf( stderr, "Var: %s  Ndims: %d   Start: ", vn, ndims );
 		for( i=0; i<ndims; i++ ) {
-			fprintf( stderr, "%ld", s_start[i] );
+			fprintf( stderr, "%u", s_start[i] );
 			if( i < ndims-1 )
 				fprintf( stderr, "," );
 			}
 		fprintf( stderr, "Count: " );
 		for( i=0; i<ndims; i++ ) {
-			fprintf( stderr, "%ld", s_count[i] );
+			fprintf( stderr, "%u", s_count[i] );
 			if( i < ndims-1 )
 				fprintf( stderr, "," );
+			}
+		}
+
+	*retval = nc_inq_vartype( *ncid, *varid, &nct );
+	if( nct == NC_BYTE ) {
+		/* netcdf library for reading from byte to int, as we do here,
+		 * is SIGNED.  So, if user requests signed, we don't have to
+		 * do anything; only adjust if user asks for unsigned.
+		 */
+		if( *byte_style == 2 ) {	/* unsigned */
+			for( k=0L; k<tot_size; k++ ) {
+				if( data[k] < 0 )
+					data[k] += 256;
+				}
 			}
 		}
 }
@@ -247,7 +269,7 @@ void R_nc_get_vara_text( int *ncid, int *varid, int *start,
 {
 	int	i, err, ndims;
 	size_t	s_start[MAX_NC_DIMS], s_count[MAX_NC_DIMS], nstr, slen;
-	char	vn[2048], *s;
+	char	vn[2048];
 
 	err = nc_inq_varndims(*ncid, *varid, &ndims );
 	if( err != NC_NOERR ) 
@@ -271,13 +293,13 @@ void R_nc_get_vara_text( int *ncid, int *varid, int *start,
 			nc_strerror(*retval) );
 		fprintf( stderr, "Var: %s  Ndims: %d   Start: ", vn, ndims );
 		for( i=0; i<ndims; i++ ) {
-			fprintf( stderr, "%ld", s_start[i] );
+			fprintf( stderr, "%u", s_start[i] );
 			if( i < ndims-1 )
 				fprintf( stderr, "," );
 			}
 		fprintf( stderr, "Count: " );
 		for( i=0; i<ndims; i++ ) {
-			fprintf( stderr, "%ld", s_count[i] );
+			fprintf( stderr, "%u", s_count[i] );
 			if( i < ndims-1 )
 				fprintf( stderr, "," );
 			}
@@ -394,6 +416,8 @@ nc_type R_nc_ttc_to_nctype( int type_to_create )
 		return( NC_DOUBLE );
 	if( type_to_create == 5 )
 		return( NC_CHAR );
+	if( type_to_create == 6 )
+		return( NC_BYTE );
 
 	fprintf(stderr,"Error, R_nc_ttc_to_nctype passed unknown value: %d\n",
 		type_to_create );
@@ -409,7 +433,7 @@ void R_nc_put_att_int( int *ncid, int *varid, char **attname,
 	*retval = nc_put_att_int(*ncid, *varid, attname[0], 
 		ttc, *natts, attribute );
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_put_att_double: %s\n", 
+		fprintf( stderr, "Error in R_nc_put_att_int: %s\n", 
 			nc_strerror(*retval) );
 }
 
@@ -458,9 +482,6 @@ void R_nc_put_att_text( int *ncid, int *varid, char **attname,
 void R_nc_get_att_int( int *ncid, int *varid, char **attname, 
 			int *attribute, int *retval )
 {
-	int	err;
-	size_t	attlen;
-
 	*retval = nc_get_att_int(*ncid, *varid, attname[0], attribute);
 }
 
@@ -469,9 +490,6 @@ void R_nc_get_att_int( int *ncid, int *varid, char **attname,
 void R_nc_get_att_double( int *ncid, int *varid, char **attname, 
 			double *attribute, int *retval )
 {
-	int	err;
-	size_t	attlen;
-
 	*retval = nc_get_att_double(*ncid, *varid, attname[0], attribute);
 }
 
@@ -603,17 +621,19 @@ void R_nc_put_var_double( int *ncid, int *varid, double *data, int *retval )
 void R_nc_put_vara_text( int *ncid, int *varid, int *start,
 	int *count, char **data, int *retval )
 {
-	int	ndims, err;
+	int	ndims, err, idx_string, idx_char;
 	size_t 	s_start[MAX_NC_DIMS], s_count[MAX_NC_DIMS], slen, slen2use;
-	long	i, j, k, stridx, ni, nj, nk;
+	long	i, j, k, stridx, nstrings, nj, nk;
 
 	/* Get # of dims for this var */
-	err = nc_inq_ndims( *ncid, &ndims );
+	err = nc_inq_varndims( *ncid, *varid, &ndims );
 	if( err != NC_NOERR )
 		fprintf( stderr, "Error on nc_inq_ndims call in R_nc_put_vara_int: %s\n", 
 			nc_strerror(*retval) );
 
-	/* Copy over from ints to size_t */
+	/* Copy over from ints to size_t.  Remember things are in C style at
+	 * this point, so the rightmost dim is the number of characters
+	 */
 	for( i=0; i<ndims; i++ ) {
 		s_start[i] = (size_t)start[i];
 		s_count[i] = (size_t)count[i];
@@ -631,14 +651,17 @@ void R_nc_put_vara_text( int *ncid, int *varid, int *start,
 			fprintf( stderr, "Error in R_nc_put_vara_int: %s\n", 
 				nc_strerror(*retval) );
 		}
+
 	else if( ndims == 2 ) {
-		ni = s_count[0];
-		for( i=0L; i<ni; i++ ) {
+		idx_string = 0;
+		idx_char   = 1;
+		nstrings = s_count[idx_string];  /* number of character strings */
+		for( i=0L; i<nstrings; i++ ) {
 			slen2use = ((slen < strlen(data[i])) ? slen : strlen(data[i]));
-			s_count[0] = 1L;
-			s_count[1] = slen2use;
-			s_start[0] = i;
-			s_start[1] = 0L;
+			s_count[idx_string] = 1L;
+			s_count[idx_char  ] = slen2use;
+			s_start[idx_string] = i;
+			s_start[idx_char  ] = 0L;
 			*retval = nc_put_vara_text(*ncid, *varid, s_start, s_count, data[i] );
 			if( *retval != NC_NOERR ) {
 				fprintf( stderr, "Error in R_nc_put_vara_text: %s\n", 
@@ -650,9 +673,9 @@ void R_nc_put_vara_text( int *ncid, int *varid, int *start,
 	else if( ndims == 3 ) {
 		stridx = 0L;
 		nj = s_count[0];
-		ni = s_count[1];
+		nstrings = s_count[1];
 		for( j=0L; j<nj; j++ )
-		for( i=0L; i<ni; i++ ) {
+		for( i=0L; i<nstrings; i++ ) {
 			slen2use = ((slen < strlen(data[i])) ? slen : strlen(data[stridx]));
 			s_count[0] = 1L;
 			s_count[1] = 1L;
@@ -672,10 +695,10 @@ void R_nc_put_vara_text( int *ncid, int *varid, int *start,
 		stridx = 0L;
 		nk = s_count[0];
 		nj = s_count[1];
-		ni = s_count[2];
+		nstrings = s_count[2];
 		for( k=0L; k<nk; k++ )
 		for( j=0L; j<nj; j++ )
-		for( i=0L; i<ni; i++ ) {
+		for( i=0L; i<nstrings; i++ ) {
 			slen2use = ((slen < strlen(data[i])) ? slen : strlen(data[stridx]));
 			s_count[0] = 1L;
 			s_count[1] = 1L;
@@ -702,14 +725,31 @@ void R_nc_put_vara_text( int *ncid, int *varid, int *start,
 }
 
 /*********************************************************************/
+void R_nc_def_var_byte( int *ncid, char **varname, int *ndims, int *dimids, 
+	int *varid, int *retval )
+{
+	*retval = nc_def_var(*ncid, varname[0], 
+		NC_BYTE, *ndims, dimids, varid );
+	if( *retval != NC_NOERR ) {
+		fprintf( stderr, "Error in R_nc_def_var_byte: %s\n", 
+			nc_strerror(*retval) );
+		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
+			varname[0] );
+		}
+}
+
+/*********************************************************************/
 void R_nc_def_var_int( int *ncid, char **varname, int *ndims, int *dimids, 
 	int *varid, int *retval )
 {
 	*retval = nc_def_var(*ncid, varname[0], 
 		NC_INT, *ndims, dimids, varid );
-	if( *retval != NC_NOERR ) 
+	if( *retval != NC_NOERR ) {
 		fprintf( stderr, "Error in R_nc_def_var_int: %s\n", 
 			nc_strerror(*retval) );
+		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
+			varname[0] );
+		}
 }
 
 /*********************************************************************/
@@ -718,9 +758,12 @@ void R_nc_def_var_short( int *ncid, char **varname, int *ndims, int *dimids,
 {
 	*retval = nc_def_var(*ncid, varname[0], 
 		NC_SHORT, *ndims, dimids, varid );
-	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_def_var_int: %s\n", 
+	if( *retval != NC_NOERR ) {
+		fprintf( stderr, "Error in R_nc_def_var_short: %s\n", 
 			nc_strerror(*retval) );
+		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
+			varname[0] );
+		}
 }
 
 /*********************************************************************/
@@ -729,9 +772,12 @@ void R_nc_def_var_float( int *ncid, char **varname, int *ndims, int *dimids,
 {
 	*retval = nc_def_var(*ncid, varname[0], 
 		NC_FLOAT, *ndims, dimids, varid );
-	if( *retval != NC_NOERR ) 
+	if( *retval != NC_NOERR ) {
 		fprintf( stderr, "Error in R_nc_def_var_float: %s\n", 
 			nc_strerror(*retval) );
+		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
+			varname[0] );
+		}
 }
 
 /*********************************************************************/
@@ -740,9 +786,12 @@ void R_nc_def_var_double( int *ncid, char **varname, int *ndims, int *dimids,
 {
 	*retval = nc_def_var(*ncid, varname[0], 
 		NC_DOUBLE, *ndims, dimids, varid );
-	if( *retval != NC_NOERR ) 
+	if( *retval != NC_NOERR ) {
 		fprintf( stderr, "Error in R_nc_def_var_double: %s\n", 
 			nc_strerror(*retval) );
+		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
+			varname[0] );
+		}
 }
 
 /*********************************************************************/
@@ -751,9 +800,12 @@ void R_nc_def_var_char( int *ncid, char **varname, int *ndims, int *dimids,
 {
 	*retval = nc_def_var(*ncid, varname[0], 
 		NC_CHAR, *ndims, dimids, varid );
-	if( *retval != NC_NOERR ) 
+	if( *retval != NC_NOERR ) {
 		fprintf( stderr, "Error in R_nc_def_var_char: %s\n", 
 			nc_strerror(*retval) );
+		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
+			varname[0] );
+		}
 }
 
 /*********************************************************************/

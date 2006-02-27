@@ -35,8 +35,8 @@
 }
 \details{
  This routine writes data values to a variable in a netCDF file.  The file
- should have either been created with \code{\link[ncdf]{create.ncdf()}}, or 
- opened with \code{\link[ncdf]{open.ncdf(,write=TRUE)}}.
+ should have either been created with \code{\link[ncdf]{create.ncdf}}, or 
+ opened with \code{\link[ncdf]{open.ncdf}} called with parameter \code{write=TRUE}..
 
  Note that the type of the values written to the file is determined when the
  variable is created; in particular, it does not matter what type you pass
@@ -45,7 +45,7 @@
  still result in integer values being written to disk.
 
  Values of "NA" are supported; they are converted to the netCDF variable's
- missing value attribute before being written.  See \code{\link[ncdf]{set.missval.ncdf()}}
+ missing value attribute before being written.  See \code{\link[ncdf]{set.missval.ncdf}}
  for more information.
 
  Data in a netCDF file is conceived as being a multi-dimensional array.

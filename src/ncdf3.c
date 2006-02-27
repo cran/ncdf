@@ -1,7 +1,7 @@
 /*   #define DEBUG */
 
 #include <stdio.h>
-#include <values.h>
+/*  #include <values.h> */
 
 #include <R.h>
 #include <Rinternals.h>
@@ -11,11 +11,40 @@ SEXP R_ncu_getListElement(SEXP list, char *str);
 int R_ncu_get_varsize( int ncid, int varid, int ndims, size_t *varsize );
 SEXP R_nc_get_vara_numvarid( SEXP sx_nc, SEXP sx_varid, SEXP sx_start, SEXP sx_count ) ;
 
+/*********************************************************************************
+ * Return the varid of the only var in the file, or -1 if more than one.
+ */
+int R_ncu_varid_onlyvar( int ncid )
+{
+	int	ierr, nvars, varid, i, dimid;
+	char	varname[MAX_NC_NAME];
+
+	varid = -1;
+	ierr = nc_inq_nvars( ncid, &nvars );
+	if( ierr != NC_NOERR )
+		error("Error reading from netcdf file!");
+
+	for( i=0; i<nvars; i++ ) {
+		ierr = nc_inq_varname( ncid, i, varname );
+		if( ierr != NC_NOERR )
+			error("Error reading from netcdf file!");
+		ierr = nc_inq_dimid( ncid, varname, &dimid );
+		if( ierr != NC_NOERR ) {
+			/* Did NOT find this var as a dim, means it is NOT a dimvar */
+			if( varid != -1 )
+				/* More than one non-dimvar dim in this file */
+				return( -1 );
+			varid = i;
+			}
+		}
+	return( varid );
+}
+
 /*================================================================================================================
  * Given as inputs start_arg and count_arg (which can be -1's for example) this calculates
  * the actual start and count to use, and returns them.
  */
-R_ncu_calc_start_count( int ncid, int varid, int *start_arg, int len_start, 
+void R_ncu_calc_start_count( int ncid, int varid, int *start_arg, int len_start, 
 	int *count_arg, int len_count, size_t *varsize,
 	int ndims, size_t *start, size_t *count )
 {
@@ -216,9 +245,8 @@ SEXP R_nc_get_vara_numvarid( SEXP sx_nc, SEXP sx_varid, SEXP sx_start, SEXP sx_c
 {
 	int 	varid, ncid, ndims, len_start, len_count, i, j, ierr,
 		start_arg[MAX_NC_DIMS], count_arg[MAX_NC_DIMS],
-		nvars, *data_addr_i, missval_i, ndims_cgt1;
-	SEXP 	rv_data, sx_varid2Rindex, sx_ncdf_var,
-		sx_nvars, sx_dim;
+		*data_addr_i, missval_i, ndims_cgt1;
+	SEXP 	rv_data, sx_ncdf_var, sx_dim;
 	size_t	start[MAX_NC_DIMS], count[MAX_NC_DIMS], varsize[MAX_NC_DIMS], tot_var_size,
 		i_szt;
 	double	*data_addr_d, missval_d, missval_tol;
@@ -461,33 +489,3 @@ SEXP R_ncu_getListElement(SEXP list, char *str)
 fprintf( stderr, "warning, no match found for element %s\n", str );
 	return elmt;
 }
-
-/*********************************************************************************
- * Return the varid of the only var in the file, or -1 if more than one.
- */
-int R_ncu_varid_onlyvar( int ncid )
-{
-	int	ierr, nvars, varid, i, dimid;
-	char	varname[MAX_NC_NAME];
-
-	varid = -1;
-	ierr = nc_inq_nvars( ncid, &nvars );
-	if( ierr != NC_NOERR )
-		error("Error reading from netcdf file!");
-
-	for( i=0; i<nvars; i++ ) {
-		ierr = nc_inq_varname( ncid, i, varname );
-		if( ierr != NC_NOERR )
-			error("Error reading from netcdf file!");
-		ierr = nc_inq_dimid( ncid, varname, &dimid );
-		if( ierr != NC_NOERR ) {
-			/* Did NOT find this var as a dim, means it is NOT a dimvar */
-			if( varid != -1 )
-				/* More than one non-dimvar dim in this file */
-				return( -1 );
-			varid = i;
-			}
-		}
-	return( varid );
-}
-

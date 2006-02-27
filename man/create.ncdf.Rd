@@ -13,7 +13,7 @@
  \item{verbose}{If TRUE, then information is printed while the file is being created.}
 }
 \value{
- An object of class \code{ncdf}, which has the fields described in \code{\link[ncdf]{open.ncdf()}}.
+ An object of class \code{ncdf}, which has the fields described in \code{\link[ncdf]{open.ncdf}}.
 }
 \references{
  http://www.unidata.ucar.edu/packages/netcdf/
@@ -22,7 +22,7 @@
  This routine creates a new netCDF file on disk.  It must be given the variables in 
  the file that will be created.
  Keep in mind that the new file may not actually be written to disk until 
- \code{\link[ncdf]{close.ncdf()}} is called.
+ \code{\link[ncdf]{close.ncdf}} is called.
 }
 \author{David W. Pierce \email{dpierce@ucsd.edu}}
 \seealso{ 
