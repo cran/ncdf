@@ -40,13 +40,16 @@
 #		by dim.inq.ncdf, which is the low-level netCDF dim, not
 #		the user-level R version of a netCDF dim.
 #     *	name	: character dim name
-#	units	: character units in udunits format
+#	units	: character units in udunits format.  
 #	vals	: a vector of dimension values
 #     *	len	: size of this dimension
 #	id	: dimension ID in the netcdf file, if applicable
 #	dimvarid: IFF this dim corresponds to a netCDF dim in an existing file,
 #		  then this field will hold the dimvarid, or -1 if no dimvar.
 #     *	unlim	: boolean, T or F to indicated unlimited or not
+#	create_dimvar : usually TRUE; if FALSE, then no dimvar will be created,
+#		  AND the units string must be empty, AND the values must
+#		  be simple integers from 1 to the length of the dim.
 # *=Indicates element is filled out by the low-level routine 'dim.inq.ncdf'.
 #   Other elements are filled out in 'open.ncdf'.
 #
@@ -57,7 +60,11 @@
 #		var, NOT the user-level R version of a netCDF var.
 #	name	: character var name
 #	units	: character units in udunits format
-#	missval	: the 'missing_value' attribute, or defaults to default.missval.ncdf()
+#	missval	: the 'missing_value' attribute, or defaults to default.missval.ncdf(). NOTE: 
+#		  if the var has no missing value then this is 'NA'.  This does not mean
+#		  that the missing value is NA -- the missing value cannot be NA.  It means
+#		  the variable has no missing value.  For instance, character variables have
+#		  no default missing value.
 #	longname: the 'long_name' attribute, or defaults to name
 #	id	: the varid of this variable, IFF it is in a file already
 #	ndims	: number of dims this variable has
@@ -76,7 +83,7 @@
 #=================================================================
 version.ncdf <- function() {
 	
-	return("1.5")
+	return("1.6")
 
 }
 
@@ -143,19 +150,29 @@ in.list.name.ncdf <- function( el, list ) {
 #	lat <- ncdf.def.dim("Lat", "degreesN", -90:90)
 #	time <- ncdf.def.dim("time", "days since 1900-01-01", 0, unlim=T)
 #
-dim.def.ncdf <- function( name, units, vals, unlim=FALSE ) {
+dim.def.ncdf <- function( name, units, vals, unlim=FALSE, create_dimvar=TRUE ) {
 
 	if( ! is.character(name) ) {
 		stop("Passed a dim name that is NOT a string of characters!")
 		}
+
+	len <- length(vals)
+	if( ! create_dimvar ) {
+		if( (units != '') || (storage.mode(vals) != "integer" ) || (vals[1] != 1) || (vals[len] != len))
+			stop(paste("Error trying to create dimension named",name,": create_dimvar was specified",
+				"to be FALSE, which indicates that NO dimensional variable is to be created;",
+				"in this case, the unit string MUST be empty ('') and the dimension values MUST",
+				"be simple integers from 1 to the length of the dimension (e.g., 1:len)"))
+		}
 	dim <- list()
-	dim$name   <- name
-	dim$units  <- units
-	dim$vals   <- vals
-	dim$len    <- length(vals)
-	dim$id     <- -1
-	dim$unlim  <- unlim
-	dim$dimvarid <- -1	# Only exists for on-disk dims
+	dim$name   	  <- name
+	dim$units  	  <- units
+	dim$vals   	  <- vals
+	dim$len    	  <- len
+	dim$id     	  <- -1
+	dim$unlim  	  <- unlim
+	dim$dimvarid 	  <- -1	# Only exists for on-disk dims
+	dim$create_dimvar <- create_dimvar
 	attr(dim,"class") <- "dim.ncdf"
 	return(dim)
 }
@@ -250,6 +267,12 @@ var.def.ncdf <- function( name, units, dim, missval, longname=name, prec="single
 		dim <- list(dim)
 	var$dim  <- dim
 	var$ndims <- length(var$dim)
+	for( i in 1:var$ndims ) {
+		if( class(var$dim[[i]]) != "dim.ncdf" ) {
+			print(var)
+			stop("Error, passed variable has a dim that is NOT of class dim.ncdf!")
+			}
+		}
 
 	#-------------------------------------------------
 	# A variable is unlimited if any of its dimensions
@@ -302,6 +325,8 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 		PACKAGE="ncdf")
 	if( rv$error != 0 ) 
 		stop(paste("Error in open.ncdf trying to open file",con))
+	if( verbose )
+		print(paste("open.ncdf: back from call to R_nc_open, ncid=",rv$id))
 
 	#-------------------------------------------------
 	# Now we make our elaborate ncdf class object
@@ -331,6 +356,9 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 		PACKAGE="ncdf")
 	if( rv$error != 0 ) 
 		stop(paste("R_nc_inq returned error on file",con,"!"))
+	if( verbose )
+		print(paste("open.ncdf: back from call to R_nc_inq for id=",nc$id,"   ndims=",rv$ndims,
+			"   nvars=",rv$nvars,"  natts=",rv$natts,"  umlimdimid=",rv$unlimdimid))
 	nc$ndims        <- rv$ndims
 	nc$natts        <- rv$natts
 	nc$unlimdimid   <- rv$unlimdimid + 1	# Change from C to R convention
@@ -359,10 +387,11 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 		d$id	   <- i
 		d$dimvarid <- varid.inq.ncdf(nc,d$name)
 		if( verbose )
-			print(paste("open.ncdf: dim name is",d$name,"  dimvarid=",d$dimvarid))
+			print(paste(".....dim name is",d$name,"  len=",d$len,"     dimvarid=",d$dimvarid))
 		if( d$dimvarid == -1 ) {	# No dimvar for this dim
-			d$vals  <- as.double(1:d$len)
+			d$vals  <- 1:d$len
 			d$units <- ""
+			d$create_dimvar <- FALSE	# in case this dim is passed to create.ncdf()
 			}
 		else {	
 			# This dim has a dimvar -- get its properties
@@ -377,11 +406,12 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 				d$vals <- rep(NA,d$len)
 			else			# Otherwise, read vals
 				d$vals <- get.var.ncdf( nc, forcevarid=d$dimvarid, verbose=verbose )
+			d$create_dimvar <- TRUE		# in case this dim is passed to create.ncdf()
 			if( verbose )
 				{
 				print("------------------------------")
 				print("Here is new dim:")
-				print(d)
+				print(paste("name=",d$name,"  len=",d$len,"   unlim=",d$unlim,"   id=",d$id,"   dimvarid=",d$dimvarid,"   units=",d$units))
 				print("------------------------------")
 				}
 			}
@@ -389,9 +419,13 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 		nc$dim[[i]] <- d
 		dimnames[i] <- d$name
 		if( verbose )
-			print(paste("open.ncdf: done processing dim ",d$name))
+			print(paste(".......open.ncdf: done processing dim ",d$name))
 		}
 	attr(nc$dim,"names") <- dimnames
+	if(verbose) {
+		print("open.ncdf: setting dim$<names> to:")
+		print(dimnames)
+		}
 	
 	#-------------------------------------------
 	# Get all the vars that this file has.  Note
@@ -419,17 +453,14 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 			# Get this var's dims
 			#--------------------
 			v$dims   <- list()
-			dimnames <- character()
 			varunlim <- FALSE
 			if( v$ndims > 0 ) {
 				for( j in 1:v$ndims ) {
 					v$dim[[j]] <- nc$dim[[ v$dimids[j] ]]
-					dimnames   <- append(dimnames, v$dim[[j]]$name )
 					if( v$dim[[j]]$unlim )
 						varunlim <- TRUE
 					v$varsize <- append(v$varsize, v$dim[[j]]$len)
 					}
-				attr(v$dim,"names") <- dimnames
 				}
 			v$unlim <- varunlim
 
@@ -440,8 +471,10 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 			mv <- att.get.ncdf( nc, i, "missing_value" )
 			if( mv$hasatt )
 				v$missval <- mv$value
-			else
+			else if( (v$prec=="float") || (v$prec=="double"))
 				v$missval <- default.missval.ncdf()
+			else
+				v$missval <- NA
 
 			#-------------------------------------------
 			# Get add_offset and scale_factor attributes 
@@ -467,14 +500,18 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 			if( verbose ) {
 				print("-----------------------")
 				print("Here is new var:")
-				print(v)
+				print(paste("name=",v$name,"  id=",v$id,"   ndims=",v$ndims,"   prec=",v$prec))
+				print("size=")
+				print(v$size)
+				print("dimids=")
+				print(v$dimids)
 				}
 			}
 		}
 	attr(nc$var,"names") <- varnames
 
 	if( verbose )
-		print("open.ncdf: leaving")
+		print(paste("open.ncdf: leaving for ncid=",nc$id))
 
 	return(nc)
 }
@@ -504,7 +541,7 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 set.missval.ncdf <- function( nc, varid, missval ) {
 
 	if( class(nc) != "ncdf" ) 
-		stop("dim.create.ncdf: passed nc NOT of class ncdf.file!")
+		stop("set.missval.ncdf: passed nc NOT of class ncdf.file!")
 
 	#------------------------------------------------------
 	# Can't do this if the file is on disk and not writable
@@ -514,9 +551,7 @@ set.missval.ncdf <- function( nc, varid, missval ) {
 
 	varid <- vobjtovarid( nc, varid )
 	idx   <- nc$varid2Rindex[varid]
-	nc$var[[idx]]$missval <<- missval
-v <- nc$var[[idx]]
-print(paste("just set missval for var with index=",idx," and name=",v$name,"to",v$missval))
+	nc$var[[idx]]$missval <- missval
 
 	if( nc$filename != "IN-MEMORY" )
 		att.put.ncdf( nc, varid, "missing_value", missval )
@@ -579,147 +614,238 @@ create.ncdf <- function( filename, vars, verbose=FALSE ) {
 		stop("Error in create.ncdf!")
 	if( verbose )
 		print(paste("back from R_nc_create for file ",filename))
-	nc$nvars  <- length(vars)
+	nc$nvars  <- 0
 	attr(nc,"class")  <- "ncdf"
 	nc$filename <- filename
 	nc$writable <- TRUE
 
-	#---------------------------------------------------
-	# Create the dims.  Harder than it sounds because we
-	# must take care not to repeat making a dim that 
-	# occurs in more than one variable.
-	#---------------------------------------------------
 	if( verbose )
 		print("create.ncdf: about to create the dims")
 	nc$ndims  <- 0
 	nc$dim    <- list()
-	made.dims <- list()
-	dimvarids <- list()
-	varnames  <- character()
-	dimnames  <- character()
-	for(ivar in 1:nc$nvars) {
-		v  <- vars[[ivar]]
-		dimvarids[[ivar]] <- vector() # This will save dimvarids for this var
-		if( class(v) != "var.ncdf" ) {
-			print("Problematic entity:")
-			print(v)
-			stop("create.ncdf: passed a var that is not of class var.ncdf!" )
-			}
-		nd <- v$ndims
-		if( verbose )
-			print(paste("create.ncdf: creating",nd,"dims for var",v$name))
-		for( idim in 1:nd ) {
-			d <- v$dim[[idim]]
-			if( verbose )
-				print(paste("create.ncdf: working on dim >",d$name,"< (number",idim,") for var",v$name))
-			place <- in.list.name.ncdf( d$name, made.dims ) # see if we've already made this dim
-			if( place == -1 ) {
-				#--------------------------------------------
-				# This dim has not been seen before -- create
-				#--------------------------------------------
-				ids         <- dim.create.ncdf(nc,d,verbose)	# makes dimvar, too!
-				dimid       <- ids[1]
-				dimvarid    <- ids[2]
-				nc$ndims    <- nc$ndims + 1
-				newel      <- list()
-				newel$name <- d$name
-				newel$dimvarid <- dimvarid
-				if( verbose )
-					print(paste("create.ncdf: creating dim",d$name))
-				newel$id   <- dimid
-				attr(newel,"class") <- "dim.ncdf"
-				made.dims[[length(made.dims)+1]] <- newel
-				dimnames    <- append(dimnames, d$name)
-				nc$dim[[nc$ndims]] <- newel
-				}
-			else
-				dimid <- made.dims[[place]]$id
+	nc$var    <- list()
 
-			dimvarids[[ivar]] <- append(dimvarids[[ivar]], dimid )
-			}
-		}
-	if( verbose ) {
-		print("Setting dim names to following:")
-		print(dimnames)
-		}
-	attr(nc$dim,"names") <- dimnames
+	max_nc_dims <- 20
+	nc$varid2Rindex <- rep(0,(length(vars)+10)*max_nc_dims)	# size is max no. of vars we can have (including dimvars)
 
-	#-------------------------------------------
-	# Now that we have our dims, create the vars
-	#-------------------------------------------
-	if( verbose )
-		print("create.ncdf: creating vars")
-	nc$varid2Rindex <- rep(0,nc$nvars+nc$ndims)	# max no. of vars we can have
-							# (including dimvars)
-	nc$var <- list()
-	for(ivar in 1:nc$nvars) {
-		v <- vars[[ivar]]
-		varnames       <- append(varnames,v$name)
-		#----------------------------------------------------
-		# Reverse the dimvarids, because R uses Fortran-style
-		# ordering and we are using the C netCDF interface
-		#----------------------------------------------------
-		dimids <- dimvarids[[ivar]]
-		dimids <- dimids[length(dimids):1]
-		newvar       <- list()
-		newvar$id    <- -1
-		newvar$error <- -1
-		if( verbose )
-			print(paste("create.ncdf: creating",v$prec,"precision var",v$name))
-		if( v$prec == "integer" )
-			funcname <- "R_nc_def_var_int"
-		else if( v$prec == "short" )
-			funcname <- "R_nc_def_var_short"
-		else if( (v$prec == "single" ) || (v$prec == "float"))
-			funcname <- "R_nc_def_var_float"
-		else if( v$prec == "double" )
-			funcname <- "R_nc_def_var_double"
-		else if( v$prec == "char" )
-			funcname <- "R_nc_def_var_char"
-		else if( v$prec == "byte" )
-			funcname <- "R_nc_def_var_byte"
-		else
-			stop(paste("internal error in create.ncdf: var has unknown precision:",v$prec,". Known vals: short single double integer char byte"))
-		newvar<-.C(funcname,
-			as.integer(nc$id),
-			v$name,
-			as.integer(v$ndims),
-			as.integer(dimids-1),	# Change from R to C convention
-			id=as.integer(newvar$id),
-			error=as.integer(newvar$error),
-			PACKAGE="ncdf")
-		if( verbose )
-			print(paste("create.ncdf: C call returned value",newvar$error))
-		if( newvar$error != 0 ) 
-			stop("Error in create.ncdf, defining var!")
-		newvar$id <- newvar$id + 1	# Change from C to R convention
-		v$id      <- newvar$id
-		nc$var[[ivar]] <- v
-		nc$varid2Rindex[newvar$id] <- ivar 
+	#---------------------------------------------------------------
+	# Add the vars to the file.  NOTE that this also adds the unique
+	# dims (and hence, dimvars) to the file as a side effect!
+	# Note also that the returned 'nc' value is updated each time
+	# this subroutine is called.
+	#---------------------------------------------------------------
+	for(ivar in 1:length(vars)) 
+		nc <- var.add.ncdf( nc, vars[[ivar]], verbose=verbose, indefine=TRUE )
 
-		#----------------------------------------------
-		# Add the attributes -- units and missing_value
-		#----------------------------------------------
-		if( (! is.null( v$units )) && (! is.na(v$units)))
-			att.put.ncdf( nc, newvar$id, "units", v$units, definemode=TRUE )
-		if( is.null( v$missval )) 
-				att.put.ncdf( nc, newvar$id, "missing_value", default.missval.ncdf(), definemode=TRUE )
-		else
-			{
-			if( ! is.na(v$missval) ) 
-				att.put.ncdf( nc, newvar$id, "missing_value", v$missval, definemode=TRUE )
-			}
-		}
-	if( verbose ) {
-		print("Setting var names to following:")
-		print(varnames)
-		}
+	#-----------------------------------------------------------
+	# Set the names attribute on the $var and $dim lists so that
+	# we can access them by name instead of only by position
+	#-----------------------------------------------------------
+	varnames <- array('',nc$nvars)
+	for( ivar in 1:nc$nvars )
+		varnames[ivar] <- nc$var[[ivar]]$name
 	attr(nc$var,"names") <- varnames
+	dimnames <- array('',nc$ndims)
+	for( idim in 1:nc$ndims )
+		dimnames[idim] <- nc$dim[[idim]]$name
+	attr(nc$dim,"names") <- dimnames
 
 	#-----------------
 	# Exit define mode
 	#-----------------
 	enddef.ncdf( nc )
+
+	return(nc)
+}
+
+#===============================================================
+dim.same.ncdf <- function( d1, d2 ) {
+
+	if( class(d1) != "dim.ncdf" ) 
+		stop("error, class of first passed argument is not dim.ncdf!")
+	if( class(d2) != "dim.ncdf" ) 
+		stop("error, class of first passed argument is not dim.ncdf!")
+
+	if( d1$name != d2$name )
+		return(FALSE)
+
+	if( d1$len != d2$len )
+		return(FALSE)
+
+	if( d1$unlim != d2$unlim )
+		return(FALSE)
+
+	return(TRUE)
+}
+
+#===============================================================
+# This is a SPECIAL PURPOSE function ONLY to be used when adding
+# an already defined variable (accomplished via "var.def.ncdf")
+# to an ALREADY EXISTING netcdf file.  Normally, when making
+# a new netcdf file from scratch, a list of vars to be created
+# would be passed to "create.ncdf"; this is the preferred method
+# of putting vars in a file.  However, sometimes it's necessary
+# to add a var to an already-existing file; that's what this
+# routine is for.
+#
+var.add.ncdf <- function( nc, v, verbose=FALSE, indefine=FALSE ) {
+	
+	if( verbose )
+		print(paste("var.add.ncdf: entering with indefine=",indefine))
+
+	if( class(nc) != "ncdf" ) 
+		stop("var.add.ncdf: passed nc NOT of class ncdf!  The first arg to var.add.ncdf must be the return value from a call to open.ncdf(...,write=TRUE)")
+	if( verbose )
+		print(paste("var.add.ncdf: ncid of file to add to=",nc$id,
+			"   filename=",nc$filename,"    writable=",nc$writable))
+
+	if( class(v) != "var.ncdf" ) 
+		stop("var.add.ncdf: passed var NOT of class var.ncdf! The second arg to var.add.ncdf must be the return value from a call to var.def.ncdf")
+	if( verbose )
+		print(paste("var.add.ncdf: varname to add=",v$name))
+
+	if( ! indefine ) {
+		if( verbose )
+			print(paste("var.add.ncdf: about to redef ncid=",nc$id))
+		redef.ncdf( nc )	# Go back into define mode
+		}
+
+	#-----------------------------------------------------
+	# Create the dims for this var.  Harder than it sounds 
+	# because we must take care not to repeat making a dim 
+	# that occurs in more than one variable.
+	#---------------------------------------------------
+	nd <- v$ndims
+	dimvarids <- array(0,nd)
+	if( verbose )
+		print(paste("var.add.ncdf: creating",nd,"dims for var",v$name))
+	for( idim in 1:nd ) {
+		d <- v$dim[[idim]]
+		if( verbose )
+			print(paste("var.add.ncdf: working on dim >",d$name,"< (number",idim,") for var",v$name))
+
+		#-----------------------------------------------
+		# See if we've already made a dim with this name
+		#-----------------------------------------------
+		place <- -1
+		if( length(nc$dim) > 0 ) {
+			for( ii in 1:length(nc$dim)) {
+				if( nc$dim[[ii]]$name == d$name ) {
+					#---------------------------------------------------------------
+					# Check to make sure this is REALLY the same dim, even though we
+					# know it has the same name as an existing dim!
+					#---------------------------------------------------------------
+					if( ! dim.same.ncdf( nc$dim[[ii]], d )) {
+						paste("Error, when trying to add variable named",
+							v$name, "to file",nc$filename,"I found this variable has a dim named",d$name)
+						paste("However, the file ALREADY has a dim named",nc$dim[[ii]]$name,"with different characteristics than the new dim with the same name!")
+						stop("This is not allowed.")
+						}
+					place <- ii
+					break
+					}
+				}
+			}
+		if( place == -1 ) {
+			#--------------------------------------------
+			# This dim has not been seen before -- create
+			#--------------------------------------------
+			if( verbose )
+				print(paste("create.ncdf: creating dim",d$name))
+			ids         <- dim.create.ncdf(nc,d,verbose)	# *** NOTE: makes the dimvar, too! ***
+			dimid       <- ids[1]
+			dimvarid    <- ids[2]
+
+			newel       <- list()
+			attr(newel,"class") <- "dim.ncdf"
+			newel$name     <- d$name
+			newel$units    <- d$units
+			newel$vals     <- d$vals
+			newel$lene     <- d$len
+			newel$id       <- dimid
+			newel$unlim    <- d$unlim
+			newel$dimvarid <- dimvarid
+			nc$ndims    <- nc$ndims + 1
+			nc$dim[[nc$ndims]] <- newel
+			}
+		else
+			dimid <- nc$dim[[place]]$id
+
+		dimvarids[idim] <- dimid
+		}
+
+	#----------------------------------------------------
+	# Reverse the dimvarids, because R uses Fortran-style
+	# ordering and we are using the C netCDF interface
+	#----------------------------------------------------
+	dimids <- dimvarids
+	dimids <- dimids[length(dimids):1]
+	newvar       <- list()
+	newvar$id    <- -1
+	newvar$error <- -1
+
+	#-----------------------------------------------------------
+	# Select the routine we will be using to create the variable
+	# based on its precision
+	#-----------------------------------------------------------
+	if( verbose )
+		print(paste("create.ncdf: creating",v$prec,"precision var",v$name))
+	if( (v$prec == "integer") || (v$prec == "int") )
+		funcname <- "R_nc_def_var_int"
+	else if( v$prec == "short" )
+		funcname <- "R_nc_def_var_short"
+	else if( (v$prec == "single" ) || (v$prec == "float"))
+		funcname <- "R_nc_def_var_float"
+	else if( v$prec == "double" )
+		funcname <- "R_nc_def_var_double"
+	else if( v$prec == "char" )
+		funcname <- "R_nc_def_var_char"
+	else if( v$prec == "byte" )
+		funcname <- "R_nc_def_var_byte"
+	else
+		stop(paste("internal error in create.ncdf: var has unknown precision:",v$prec,". Known vals: short single double integer char byte"))
+
+	#---------------------------------
+	# Now actually create the variable
+	#---------------------------------
+	newvar<-.C(funcname,
+		as.integer(nc$id),
+		v$name,
+		as.integer(v$ndims),
+		as.integer(dimids-1),	# Change from R to C convention
+		id=as.integer(newvar$id),
+		error=as.integer(newvar$error),
+		PACKAGE="ncdf")
+	if( verbose )
+		print(paste("create.ncdf: C call returned value",newvar$error))
+	if( newvar$error != 0 ) 
+		stop("Error in create.ncdf, defining var!")
+	newvar$id <- newvar$id + 1	# Change from C to R convention
+	v$id      <- newvar$id
+	nc$nvars  <- nc$nvars + 1
+	nc$var[[nc$nvars]] <- v
+	nc$varid2Rindex[newvar$id] <- nc$nvars
+
+	#------------------------------------------------------
+	# Add the attributes -- units, missing_value, long_name
+	#------------------------------------------------------
+	if( (! is.null( v$units )) && (! is.na(v$units))) 
+		att.put.ncdf( nc, newvar$id, "units", v$units, definemode=TRUE )
+
+	if( is.null( v$missval ) && ((v$prec=="single") || (v$prec=="float") || (v$prec=="double"))) {
+		att.put.ncdf( nc, newvar$id, "missing_value", default.missval.ncdf(), definemode=TRUE )
+		}
+	else
+		{
+		if( ! is.na(v$missval) ) {
+			att.put.ncdf( nc, newvar$id, "missing_value", v$missval, definemode=TRUE )
+			}
+		}
+	if( v$longname != v$name )
+		att.put.ncdf( nc, newvar$id, "long_name", v$longname, definemode=TRUE )
+
+	if( ! indefine )
+		enddef.ncdf( nc )	# Exit define mode
 
 	return(nc)
 }
@@ -733,14 +859,15 @@ create.ncdf <- function( filename, vars, verbose=FALSE ) {
 #
 dim.create.ncdf <- function( nc, d, verbose=FALSE ) {
 
-	if( verbose )
-		print(paste("dim.create.ncdf: entering for dim",d$name))
-
 	if( class(nc) != "ncdf" ) 
 		stop("dim.create.ncdf: passed nc NOT of class ncdf.file!")
+	if( verbose )
+		print(paste("dim.create.ncdf: entering for ncid=",nc$id))
 
 	if( class(d) != "dim.ncdf" ) 
 		stop("dim.create.ncdf: passed d NOT of class ncdf.dim!")
+	if( verbose )
+		print(paste("dim.create.ncdf: entering for dim",d$name))
 
 	#-------------------
 	# Make the dimension
@@ -764,86 +891,108 @@ dim.create.ncdf <- function( nc, d, verbose=FALSE ) {
 		stop("Error in dim.create.ncdf!")
 	ncdim$id <- ncdim$id + 1	# Change from C to R convention
 
-	#----------------
-	# Make the dimvar
-	#----------------
+	#-----------------------------
+	# Make the dimvar if requested
+	#-----------------------------
 	dimvar<-list()
-	dimvar$id    <- -1
-	dimvar$error <- -1
-	if( storage.mode(d$vals) == "integer" ) {
-		if( verbose )
-			print(paste("dim.create.ncdf: about to call R_nc_def_var_int for dimvar",d$name))
-		dimvar<-.C("R_nc_def_var_int",
-			as.integer(nc$id),
-			d$name,
-			as.integer(c(1)),
-			as.integer(ncdim$id-1),	# Change from R to C convention
-			id=as.integer(dimvar$id),
-			error=as.integer(dimvar$error),
-			PACKAGE="ncdf")
-		}
-	else
-		{
-		if( verbose )
-			print(paste("dim.create.ncdf: about to call R_nc_def_var_double for dimvar",d$name))
-		dimvar<-.C("R_nc_def_var_double",
-			as.integer(nc$id),
-			d$name,
-			as.integer(c(1)),
-			as.integer(ncdim$id-1), # Change from R to C convention
-			id=as.integer(dimvar$id),
-			error=as.integer(dimvar$error),
-			PACKAGE="ncdf")
-		}
-	if( dimvar$error != 0 ) 
-		stop("Error defining dimvar in routine dim.create.ncdf")
-	dimvar$id <- dimvar$id + 1	# Change from C to R convention
-	dimvarid  <- dimvar$id
-
-	#---------------------------------
-	# Put in the dimvals as specified.
-	#---------------------------------
-	enddef.ncdf( nc )	# Must exit define mode for this
-	rv <- list()
-	rv$error <- -1
-	start <- 0		# Use C convention
-	count <- length(d$vals)
-	if( count > 0 ) {
+	if( d$create_dimvar ) {
+		if( verbose ) print(paste("dim.create.ncdf: making dimvar for dim",d$name))
+		dimvar$id    <- -1
+		dimvar$error <- -1
 		if( storage.mode(d$vals) == "integer" ) {
 			if( verbose )
-				print(paste("dim.create.ncdf: about to call R_nc_put_vara_int dimvals for dimvar",d$name))
-			rv <- .C("R_nc_put_vara_int",
+				print(paste("dim.create.ncdf: about to call R_nc_def_var_int for dimvar",d$name))
+			dimvar<-.C("R_nc_def_var_int",
 				as.integer(nc$id),
-				as.integer(dimvar$id-1),	# Change from R to C convention
-				as.integer(start),
-				as.integer(count),
-				as.integer(d$vals),
-				error=as.integer(rv$error),
-				PACKAGE="ncdf")
-			}
-		else if( storage.mode(d$vals) == "double" ) {
-			if( verbose )
-				print(paste("dim.create.ncdf: about to call R_nc_put_vara_double dimvals for dimvar",d$name))
-			rv <- .C("R_nc_put_vara_double",
-				as.integer(nc$id),
-				as.integer(dimvar$id-1),	# Change from R to C convention
-				as.integer(start),
-				as.integer(count),
-				as.double(d$vals),
-				error=as.integer(rv$error),
+				d$name,
+				as.integer(c(1)),
+				as.integer(ncdim$id-1),	# Change from R to C convention
+				id=as.integer(dimvar$id),
+				error=as.integer(dimvar$error),
 				PACKAGE="ncdf")
 			}
 		else
-			stop(paste("dim.create.ncdf: unknown storage mode:",storage.mode(d$vals),"for dim",d$name))
-		if( rv$error != 0 )
-			stop("Error in dim.create.ncdf, while writing dimvar values!")
-		}
-	redef.ncdf( nc )	# Go back into define mode
+			{
+			if( verbose )
+				print(paste("dim.create.ncdf: about to call R_nc_def_var_double for dimvar",d$name))
+			dimvar<-.C("R_nc_def_var_double",
+				as.integer(nc$id),
+				d$name,
+				as.integer(c(1)),
+				as.integer(ncdim$id-1), # Change from R to C convention
+				id=as.integer(dimvar$id),
+				error=as.integer(dimvar$error),
+				PACKAGE="ncdf")
+			}
+		if( dimvar$error != 0 ) 
+			stop("Error defining dimvar in routine dim.create.ncdf")
+		dimvar$id <- dimvar$id + 1	# Change from C to R convention
+		dimvarid  <- dimvar$id
 
-	#----------------------------------------------------
-	# Set the dimension's (dimvar's, actually) attributes
-	#----------------------------------------------------
-	att.put.ncdf( nc, dimvar$id, "units", d$units, definemode=TRUE )
+		#---------------------------------
+		# Put in the dimvals as specified.
+		#---------------------------------
+		enddef.ncdf( nc )	# Must exit define mode for this
+		rv <- list()
+		rv$error <- -1
+		start <- 0		# Use C convention
+		count <- length(d$vals)
+		if( count > 0 ) {
+			if( storage.mode(d$vals) == "integer" ) {
+				if( verbose )
+					print(paste("dim.create.ncdf: about to call R_nc_put_vara_int dimvals for dimvar",d$name))
+				rv <- .C("R_nc_put_vara_int",
+					as.integer(nc$id),
+					as.integer(dimvar$id-1),	# Change from R to C convention
+					as.integer(start),
+					as.integer(count),
+					as.integer(d$vals),
+					error=as.integer(rv$error),
+					PACKAGE="ncdf")
+				}
+			else if( storage.mode(d$vals) == "double" ) {
+				if( verbose )
+					print(paste("dim.create.ncdf: about to call R_nc_put_vara_double dimvals for dimvar",d$name))
+				rv <- .C("R_nc_put_vara_double",
+					as.integer(nc$id),
+					as.integer(dimvar$id-1),	# Change from R to C convention
+					as.integer(start),
+					as.integer(count),
+					as.double(d$vals),
+					error=as.integer(rv$error),
+					PACKAGE="ncdf")
+				}
+			else
+				stop(paste("dim.create.ncdf: unknown storage mode:",storage.mode(d$vals),"for dim",d$name))
+			if( rv$error != 0 )
+				stop("Error in dim.create.ncdf, while writing dimvar values!")
+			}
+		redef.ncdf( nc )	# Go back into define mode
+
+		#----------------------------------------------------
+		# Set the dimension's (dimvar's, actually) attributes
+		#----------------------------------------------------
+		att.put.ncdf( nc, dimvar$id, "units", d$units, definemode=TRUE )
+
+		}	# end of "if(create_dimvar)"
+	else
+		{
+		if( verbose ) print(paste("dim.create.ncdf: NOT making dimvar for dim",d$name))
+		#----------------------------------------------------------
+		# if we were NOT asked to create the dimvar (via an empty
+		# units string) than make sure NO dim values were specified
+		# except simple integers from 1 to len!
+		#----------------------------------------------------------
+		if( (storage.mode( d$vals ) != "integer" ) || (d$vals[1] != 1) || (d$vals[d$len] != d$len))
+			stop(paste("Error trying to create dimension named",d$name,": the passed units string",
+				"was empty, which indicates that NO dimensional variable is to be created.",
+				"In this case, the dimension values MUST be simple integers from 1 to the length",
+				"of the dimension (e.g., 1:len)"))
+		dimvar$id = -1
+		}
+
+	if( verbose )
+		print(paste("dim.create.ncd: exiting for ncid=",nc$id,"  dim=",d$name))
 
 	#----------------------------------------------
 	# Return the dimvar ID of the newly created dim
@@ -1090,7 +1239,7 @@ att.put.ncdf <- function( nc, varid, attname, attval, prec=NA,
 		typetocreate <- atttypeDbl
 	else if( (prec == "integer" ) || (prec == "int"))
 		typetocreate <- atttypeInt
-	else if( (prec == "text") || (prec == "character"))
+	else if( (prec == "text") || (prec == "character") || (prec == "char"))
 		typetocreate <- atttypeText
 	else
 		stop(paste("Error in att.put.ncdf: unknown prec type specified:",prec,". Known values: short integer single double character"))
@@ -1254,7 +1403,11 @@ vobjtovarid <- function( nc, varid, verbose=FALSE, allowdimvar=TRUE) {
 			if( is.na(varidOK) || (!varidOK)) {
 				print("vobjtovarid: I was passed a var.ncdf object, BUT this object does NOT refer to any valid var in the netcdf file!")
 				print(paste("This happened for netCDF filename:",nc$filename))
-				print(paste("The passed varid (which does NOT exist in that file) is:", origvarid))
+				print("Here are the vars in the netCDF file:")
+				for( ii in 1:nc$nvars )
+					print(paste(ii,": ",nc$var[[ii]]$name, sep='' ))
+				print(paste("The passed varid object (which does NOT exist in that file) is:"))
+				print(origvarid)
 				print(paste("Hint: make SURE the variable was not only defined with a call to def.var.ncdf, but also included in the list passed to create.var.ncdf"))
 				stop("stopping")
 				}
@@ -1525,6 +1678,9 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 		print(varid)
 		}
 
+	if( ! nc$writable ) 
+		stop(paste("trying to write to file",nc$filename,"but it was not opened with write=TRUE"))
+
 	#-------------------------------------------------------------
 	# First check to see if we are ACTUALLY putting dimvar values.  
 	#-------------------------------------------------------------
@@ -1543,8 +1699,8 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 		if(verbose) print("put.var.ncdf: putting values to a DIMVAR") 
 		varid <- nc$dim[[rvdim$name]]$dimvarid
 		if( is.null(varid) || (varid == -1)) {
-			print("put.var.ncdf: odd error -- trying to put a dimvar value")
-			print("to a non-existentent dimvar?!" );
+			print("put.var.ncdf: error -- trying to write values to a dimvar, BUT the file does not have the")
+			print("specified dimvar in it! (It probably has the dimension, but not the dimension *variable*)" );
 			print(paste("Passed nc filename:",nc$filename))
 			print(paste("Passed varid:",varid))
 			stop("Dimvar does not exist")
@@ -1563,45 +1719,6 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 
 	varsize <- varsize.ncdf ( nc, varid )
 	ndims   <- varndims.ncdf( nc, varid )
-
-	#-----------------------------------------------------------
-	# If there is no start and count given, we assume that the
-	# values are for the whole variable UNLESS the variable has
-	# an unlimited dimension.  In that case, we assume that
-	# the values are for the NEXT TIMESTEP.  (If you do not want
-	# this behavior, then explicitly set start and count).
-	#-----------------------------------------------------------
-	rv <- list()
-	rv$error   <- -1
-	rv$isunlim <- -1
-	rv <- .C("R_nc_inq_varunlim",
-		as.integer(nc$id),
-		as.integer(varid-1),	# change from R to C convention
-		isunlim=as.integer(rv$isunlim),
-		error=as.integer(rv$error),
-		PACKAGE="ncdf")
-	if( rv$error != 0 ) 
-		stop("call to C function R_nc_inq_varunlim returned error")
-	if( (length(start)==1) && is.na(start) && rv$isunlim ) {
-		#------------------------------------------------
-		# OK, var is unlimited AND we have no start.  Put
-		# data into the next timestep.
-		#------------------------------------------------
-		ntnow        <- varsize[ndims]
-		start        <- rep(1,ndims)
-		start[ndims] <- ntnow + 1
-		}
-	if( (length(count)==1) && is.na(count) && rv$isunlim ) {
-		#-----------------------------------------------------
-		# In this case it is possible to have a wrong count
-		# calculated below, because count defaults to varsize,
-		# and if we have only supplied ONE timestep then we
-		# are not writing all previous time values as well!
-		# If so, then set count for the time dim to 1.
-		#-----------------------------------------------------
-		count <- varsize - start + 1	
-		count[ndims] <- 1
-		}
 
 	#--------------------------------------------------------
 	# Fix up start and count to use (in R convention for now)
@@ -1647,6 +1764,24 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 	precint <- vartype.ncdf( nc, varid ) # 1=short, 2=int, 3=float, 4=double, 5=char, 6=byte
 	if( verbose )
 		print(paste("Putting var of type",precint," (1=short, 2=int, 3=float, 4=double, 5=char, 6=byte)"))
+
+	#----------------------------------------------------------
+	# Sanity check to make sure we have at least as many values 
+	# in the data array as we are writing.  Chars are a special
+	# case because typically they are defined with an extra
+	# "nchar" dim that is not included in the passed array.
+	#----------------------------------------------------------
+	n2write <- prod(count)
+	if( (precint != 5) && (length(vals) != n2write)) {
+		if( length(vals) > n2write ) 
+			print(paste("put.var.ncdf: warning: you asked to write",n2write,
+				"values, but the passed data array has",length(vals),
+				"entries!"))
+		else
+			stop(paste("put.var.ncdf: error: you asked to write",n2write,
+				"values, but the passed data array only has",length(vals),
+				"entries!"))
+		}
 
 	rv <- list()
 	rv$error <- -1
@@ -1739,6 +1874,9 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 			}
 		}
 
+	have_start = (length(start)>1) || ((length(start)==1) && (!is.na(start)))
+	have_count = (length(count)>1) || ((length(count)==1) && (!is.na(count)))
+
 	if( class(nc) != "ncdf" )
 		stop("first argument (nc) is not of class ncdf!")
 
@@ -1769,6 +1907,10 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 			# Here we return default integers for dims with no dimvar
 			#--------------------------------------------------------
 			if( varid == -1 ) {
+				if( ! have_start )
+					start <- 1
+				if( ! have_count )
+					count <- nc$dim[[dimidtouse]]$len
 				if( count == 1 )
 					return( start )
 				else
@@ -1805,9 +1947,9 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 		}
 	else
 		{
-		if( (length(start)==1) && is.na(start) )
+		if( ! have_start )
 			start <- rep(1,ndims)	# Note: use R convention for now
-		if( (length(count)==1) && is.na(count)) 
+		if( ! have_count )
 			count <- varsize - start + 1	
 		else
 			{

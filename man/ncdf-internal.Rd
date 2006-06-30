@@ -1,6 +1,7 @@
 \name{ncdf-internal}
 \title{Internal ncdf functions}
 \alias{dim.create.ncdf}
+\alias{dim.same.ncdf}
 \alias{default.missval.ncdf}
 \alias{in.list.name.ncdf}
 \alias{varname.inq.ncd}

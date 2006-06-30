@@ -554,24 +554,43 @@ void R_nc_get_att_text( int *ncid, int *varid, char **attname,
 void R_nc_put_vara_double( int *ncid, int *varid, int *start,
 	int *count, double *data, int *retval )
 {
-	int i, ndims, err;
+	int i, ndims, err, verbose;
 	size_t s_start[MAX_NC_DIMS], s_count[MAX_NC_DIMS];
+
+	verbose = 0;
+
+	if( verbose ) 
+		fprintf( stderr, "R_nc_put_vara_double: entering with ncid=%d, varid=%d\n", *ncid, *varid );
 
 	/* Get # of dims for this var */
 	err = nc_inq_ndims( *ncid, &ndims );
 	if( err != NC_NOERR )
 		fprintf( stderr, "Error on nc_inq_ndims call in R_nc_put_vara_double: %s\n", 
 			nc_strerror(*retval) );
+	if( verbose ) 
+		fprintf( stderr, "R_nc_put_vara_double: for this var ndims=%d\n", ndims );
 
 	/* Copy over from ints to size_t */
 	for( i=0; i<ndims; i++ ) {
 		s_start[i] = (size_t)start[i];
 		s_count[i] = (size_t)count[i];
 		} 
+
+	if( verbose ) {
+		fprintf( stderr, "R_nc_put_vara_double: about to write with start=" );
+		for( i=0; i<ndims; i++ ) 
+			fprintf(stderr,"%d ", s_start[i] );
+		fprintf( stderr, "   count=" );
+		for( i=0; i<ndims; i++ ) 
+			fprintf(stderr,"%d ", s_count[i] );
+		}
+
 	*retval = nc_put_vara_double(*ncid, *varid, s_start, s_count, data );
 	if( *retval != NC_NOERR ) 
 		fprintf( stderr, "Error in R_nc_put_vara_double: %s\n", 
 			nc_strerror(*retval) );
+	if( verbose ) 
+		fprintf( stderr, "R_nc_put_vara_double: returning with errval=%d\n", *retval );
 }
 
 /*********************************************************************/
@@ -735,6 +754,8 @@ void R_nc_def_var_byte( int *ncid, char **varname, int *ndims, int *dimids,
 			nc_strerror(*retval) );
 		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
 			varname[0] );
+		if( *retval == NC_ENAMEINUSE )
+			fprintf( stderr, "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
 		}
 }
 
@@ -749,6 +770,8 @@ void R_nc_def_var_int( int *ncid, char **varname, int *ndims, int *dimids,
 			nc_strerror(*retval) );
 		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
 			varname[0] );
+		if( *retval == NC_ENAMEINUSE )
+			fprintf( stderr, "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
 		}
 }
 
@@ -763,6 +786,8 @@ void R_nc_def_var_short( int *ncid, char **varname, int *ndims, int *dimids,
 			nc_strerror(*retval) );
 		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
 			varname[0] );
+		if( *retval == NC_ENAMEINUSE )
+			fprintf( stderr, "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
 		}
 }
 
@@ -777,6 +802,8 @@ void R_nc_def_var_float( int *ncid, char **varname, int *ndims, int *dimids,
 			nc_strerror(*retval) );
 		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
 			varname[0] );
+		if( *retval == NC_ENAMEINUSE )
+			fprintf( stderr, "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
 		}
 }
 
@@ -791,6 +818,8 @@ void R_nc_def_var_double( int *ncid, char **varname, int *ndims, int *dimids,
 			nc_strerror(*retval) );
 		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
 			varname[0] );
+		if( *retval == NC_ENAMEINUSE )
+			fprintf( stderr, "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
 		}
 }
 
@@ -805,6 +834,8 @@ void R_nc_def_var_char( int *ncid, char **varname, int *ndims, int *dimids,
 			nc_strerror(*retval) );
 		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
 			varname[0] );
+		if( *retval == NC_ENAMEINUSE )
+			fprintf( stderr, "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
 		}
 }
 

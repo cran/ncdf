@@ -1,6 +1,6 @@
 \name{ncdf}
 \alias{ncdf}
-\title{Read, write, and create netCDF files (v1.5)}
+\title{Read, write, and create netCDF files (v1.6)}
 \description{
  Read from or write to existing netCDF format files, or create new ones.
 }
@@ -34,7 +34,7 @@
  to create the netCDF file, then call \code{\link[ncdf]{put.var.ncdf}}
  to write your data to the newly created netCDF file.
 
- This is version 1.5 of the ncdf library.
+ This is version 1.6 of the ncdf library.
 }
 \seealso{ 
  \code{\link[ncdf]{att.put.ncdf}}, \code{\link[ncdf]{att.get.ncdf}},
