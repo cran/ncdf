@@ -419,9 +419,8 @@ nc_type R_nc_ttc_to_nctype( int type_to_create )
 	if( type_to_create == 6 )
 		return( NC_BYTE );
 
-	fprintf(stderr,"Error, R_nc_ttc_to_nctype passed unknown value: %d\n",
-		type_to_create );
-	exit(-1);
+	error("Error, R_nc_ttc_to_nctype passed unknown value: %d\n",
+	      type_to_create );
 }
 
 /*********************************************************************/

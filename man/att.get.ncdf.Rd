@@ -2,7 +2,7 @@
 \alias{att.get.ncdf}
 \title{Get attribute from netCDF file}
 \description{
- Reads an attribute from a netCDF file.}
+ Reads an attribute from a netCDF file.
 }
 \usage{
  att.get.ncdf( nc, varid, attname )

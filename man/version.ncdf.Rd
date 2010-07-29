@@ -1,16 +1,14 @@
 \name{version.ncdf}
 \alias{version.ncdf}
-\title{Report version of ncdf library}
+\title{Report version of ncdf package}
 \description{
- Returns a string that is the version number of the ncdf library}
+ Returns a string that is the version number of the ncdf package.
 }
 \usage{
  version.ncdf()
 }
-\arguments{
-}
 \value{
- A string (not float) that is the version number of the ncdf library.
+ A string (not float) that is the version number of the ncdf package.
 }
 \references{
  http://www.unidata.ucar.edu/packages/netcdf/

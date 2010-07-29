@@ -214,7 +214,8 @@ void R_ncu_calc_start_count( int ncid, int varid, int *start_arg, int len_start,
  */
 SEXP R_nc_get_vara_charvarid( SEXP sx_nc, SEXP sx_varid, SEXP sx_start, SEXP sx_count ) 
 {
-	char  	*varname, errmess[1024];
+    const char *varname; 
+    char errmess[1024];
 	int	varid, ierr, ncid;
 	SEXP	retval, sx_numvarid;
 
@@ -250,7 +251,7 @@ SEXP R_nc_get_vara_numvarid( SEXP sx_nc, SEXP sx_varid, SEXP sx_start, SEXP sx_c
 	size_t	start[MAX_NC_DIMS], count[MAX_NC_DIMS], varsize[MAX_NC_DIMS], tot_var_size,
 		i_szt;
 	double	*data_addr_d, missval_d, missval_tol;
-	char	*filename;
+	const char	*filename;
 	nc_type	vartype;
 
 	/*--------------------------------------------------------------------------- 

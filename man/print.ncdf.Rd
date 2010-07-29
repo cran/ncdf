@@ -6,7 +6,7 @@
  it contains.
 }
 \usage{
- print.ncdf( x, ... )
+ \method{print}{ncdf}( x, ... )
 }
 \arguments{
  \item{x}{An object of class "ncdf".}

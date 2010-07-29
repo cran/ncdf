@@ -34,7 +34,7 @@
 }
 \author{David W. Pierce \email{dpierce@ucsd.edu}}
 \seealso{ 
- \code{\link[ncdf]{att.put.ncdf}}, \code{\link[ncdf]{att.text.get.ncdf}}. 
+ \code{\link[ncdf]{att.get.ncdf}}. 
 }
 \examples{
 # Make a simple netCDF file
