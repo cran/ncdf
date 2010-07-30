@@ -271,7 +271,7 @@ PACKAGE_VERSION=
 PACKAGE_STRING=
 PACKAGE_BUGREPORT=
 
-ac_unique_file="R/load.R.in"
+ac_unique_file="src/Makevars.in"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
@@ -4412,7 +4412,7 @@ HAVE_NETCDF=TRUE
 
 
 
-                    ac_config_files="$ac_config_files R/load.R src/Makevars"
+                    ac_config_files="$ac_config_files src/Makevars"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -4963,7 +4963,6 @@ for ac_config_target in $ac_config_targets
 do
   case "$ac_config_target" in
   # Handling of arguments.
-  "R/load.R" ) CONFIG_FILES="$CONFIG_FILES R/load.R" ;;
   "src/Makevars" ) CONFIG_FILES="$CONFIG_FILES src/Makevars" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}

@@ -8,6 +8,7 @@ fi
 CC=`${R_HOME}/bin/R CMD config CC`
 CFLAGS=`${R_HOME}/bin/R CMD config CFLAGS`
 
+## This is a private macro, part of ncview?
 AC_PATH_NETCDF
 
 foundnetcdf=false
@@ -30,6 +31,5 @@ AC_SUBST(NETCDF_INCDIR)
 AC_SUBST(NETCDF_LIBDIR)
 AC_SUBST(NETCDF_LIBNAME)
 
-AC_OUTPUT(R/load.R
-	src/Makevars)
+AC_OUTPUT(src/Makevars)
 

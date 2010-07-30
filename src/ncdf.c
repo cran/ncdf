@@ -193,13 +193,13 @@ void R_nc_get_vara_double( int *ncid, int *varid, int *start,
 			nc_strerror(*retval) );
 		fprintf( stderr, "Var: %s  Ndims: %d   Start: ", vn, ndims );
 		for( i=0; i<ndims; i++ ) {
-			fprintf( stderr, "%u", s_start[i] );
+		        fprintf( stderr, "%u", (unsigned int) s_start[i] );
 			if( i < ndims-1 )
 				fprintf( stderr, "," );
 			}
 		fprintf( stderr, "Count: " );
 		for( i=0; i<ndims; i++ ) {
-			fprintf( stderr, "%u", s_count[i] );
+		    fprintf( stderr, "%u", (unsigned int) s_count[i] );
 			if( i < ndims-1 )
 				fprintf( stderr, "," );
 			}
@@ -236,13 +236,13 @@ void R_nc_get_vara_int( int *ncid, int *varid, int *start,
 			nc_strerror(*retval) );
 		fprintf( stderr, "Var: %s  Ndims: %d   Start: ", vn, ndims );
 		for( i=0; i<ndims; i++ ) {
-			fprintf( stderr, "%u", s_start[i] );
+		        fprintf( stderr, "%u", (unsigned int) s_start[i] );
 			if( i < ndims-1 )
 				fprintf( stderr, "," );
 			}
 		fprintf( stderr, "Count: " );
 		for( i=0; i<ndims; i++ ) {
-			fprintf( stderr, "%u", s_count[i] );
+		        fprintf( stderr, "%u", (unsigned int) s_count[i] );
 			if( i < ndims-1 )
 				fprintf( stderr, "," );
 			}
@@ -293,13 +293,13 @@ void R_nc_get_vara_text( int *ncid, int *varid, int *start,
 			nc_strerror(*retval) );
 		fprintf( stderr, "Var: %s  Ndims: %d   Start: ", vn, ndims );
 		for( i=0; i<ndims; i++ ) {
-			fprintf( stderr, "%u", s_start[i] );
+		    fprintf( stderr, "%u", (unsigned int) s_start[i] );
 			if( i < ndims-1 )
 				fprintf( stderr, "," );
 			}
 		fprintf( stderr, "Count: " );
 		for( i=0; i<ndims; i++ ) {
-			fprintf( stderr, "%u", s_count[i] );
+		    fprintf( stderr, "%u", (unsigned int) s_count[i] );
 			if( i < ndims-1 )
 				fprintf( stderr, "," );
 			}
@@ -421,6 +421,7 @@ nc_type R_nc_ttc_to_nctype( int type_to_create )
 
 	error("Error, R_nc_ttc_to_nctype passed unknown value: %d\n",
 	      type_to_create );
+	return( NC_BYTE ); /* -Wall */
 }
 
 /*********************************************************************/
@@ -578,10 +579,10 @@ void R_nc_put_vara_double( int *ncid, int *varid, int *start,
 	if( verbose ) {
 		fprintf( stderr, "R_nc_put_vara_double: about to write with start=" );
 		for( i=0; i<ndims; i++ ) 
-			fprintf(stderr,"%d ", s_start[i] );
+		    fprintf(stderr,"%d ", (unsigned int) s_start[i] );
 		fprintf( stderr, "   count=" );
 		for( i=0; i<ndims; i++ ) 
-			fprintf(stderr,"%d ", s_count[i] );
+		    fprintf(stderr,"%d ", (unsigned int) s_count[i] );
 		}
 
 	*retval = nc_put_vara_double(*ncid, *varid, s_start, s_count, data );
