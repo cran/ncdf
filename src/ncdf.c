@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <netcdf.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <Rdefines.h>
 
@@ -49,7 +50,7 @@ void R_nc_varsize( int *ncid, int *varid, int *varsize, int *retval )
 	/* Get ndims */
 	err = nc_inq_varndims( *ncid, *varid, &ndims );
 	if( err != NC_NOERR ) {
-		fprintf( stderr, "Error in R_nc_varsize on nc_inq_varndims call: %s\n", 
+		REprintf( "Error in R_nc_varsize on nc_inq_varndims call: %s\n", 
 			nc_strerror(err) );
 		*retval = -1;
 		return;
@@ -58,7 +59,7 @@ void R_nc_varsize( int *ncid, int *varid, int *varsize, int *retval )
 	/* Get dimids */
 	err = nc_inq_vardimid( *ncid, *varid, dimid );
 	if( err != NC_NOERR ) {
-		fprintf( stderr, "Error in R_nc_varsize on nc_inq_vardimid call: %s\n",
+		REprintf( "Error in R_nc_varsize on nc_inq_vardimid call: %s\n",
 			nc_strerror(err) );
 		*retval = -1;
 		return;
@@ -68,7 +69,7 @@ void R_nc_varsize( int *ncid, int *varid, int *varsize, int *retval )
 	for( i=0; i<ndims; i++ ) {
 		err = nc_inq_dimlen( *ncid, dimid[i], &dimlen );
 		if( err != NC_NOERR ) {
-			fprintf( stderr, "Error in R_nc_varsize on nc_inq_dimlen call: %s\n",
+			REprintf( "Error in R_nc_varsize on nc_inq_dimlen call: %s\n",
 				nc_strerror(err) );
 			*retval = -1;
 			return;
@@ -86,7 +87,7 @@ void R_nc_inq_varunlim( int *ncid, int *varid, int *isunlim, int *retval )
 	/* Get the unlimited dim id */
 	*retval = nc_inq_unlimdim( *ncid, &unlimdimid );
 	if( *retval != NC_NOERR ) {
-		fprintf( stderr, "Error in R_nc_inq_varunlim while getting unlimdimid: %s\n", 
+		REprintf(  "Error in R_nc_inq_varunlim while getting unlimdimid: %s\n", 
 			nc_strerror(*retval) );
 		return;
 		}
@@ -94,9 +95,9 @@ void R_nc_inq_varunlim( int *ncid, int *varid, int *isunlim, int *retval )
 	/* Get this var's ndims */
 	*retval = nc_inq_varndims( *ncid, *varid, &ndims );
 	if( *retval != NC_NOERR ) {
-		fprintf( stderr, "Error in R_nc_inq_varunlim while getting ndims: %s\n", 
+		REprintf( "Error in R_nc_inq_varunlim while getting ndims: %s\n", 
 			nc_strerror(*retval) );
-		fprintf( stderr, "Using ncid=%d and varid=%d\n", 
+		REprintf( "Using ncid=%d and varid=%d\n", 
 			*ncid, *varid );
 		return;
 		}
@@ -104,7 +105,7 @@ void R_nc_inq_varunlim( int *ncid, int *varid, int *isunlim, int *retval )
 	/* Get this var's dims */
 	*retval = nc_inq_vardimid( *ncid, *varid, dimids );
 	if( *retval != NC_NOERR ) {
-		fprintf( stderr, "Error in R_nc_inq_varunlim while getting dimids: %s\n", 
+		REprintf( "Error in R_nc_inq_varunlim while getting dimids: %s\n", 
 			nc_strerror(*retval) );
 		return;
 		}
@@ -129,7 +130,7 @@ void R_nc_inq_var( int *ncid, int *varid, char **varname,
 	*type = (int)nct;
 
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_inq_var: %s\n", 
+		REprintf( "Error in R_nc_inq_var: %s\n", 
 			nc_strerror(*retval) );
 
 	*precint = R_nc_nctype_to_Rtypecode(nct);
@@ -143,7 +144,7 @@ void R_nc_inq_vartype( int *ncid, int *varid, int *precint, int *retval )
 	*retval = nc_inq_vartype( *ncid, *varid, &nct );
 
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_inq_var: %s\n", 
+		REprintf( "Error in R_nc_inq_var: %s\n", 
 			nc_strerror(*retval) );
 
 	*precint = R_nc_nctype_to_Rtypecode(nct);
@@ -155,7 +156,7 @@ void R_nc_inq_varname( int *ncid, int *varid, char **varname, int *retval )
 {
 	*retval = nc_inq_varname(*ncid, *varid, varname[0] );
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_inq_varname: %s\n", 
+		REprintf( "Error in R_nc_inq_varname: %s\n", 
 			nc_strerror(*retval) );
 }
 
@@ -164,7 +165,7 @@ void R_nc_inq_varndims( int *ncid, int *varid, int *ndims, int *retval )
 {
 	*retval = nc_inq_varndims(*ncid, *varid, ndims );
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_inq_varndims: %s\n", 
+		REprintf( "Error in R_nc_inq_varndims: %s\n", 
 			nc_strerror(*retval) );
 }
 
@@ -178,7 +179,7 @@ void R_nc_get_vara_double( int *ncid, int *varid, int *start,
 
 	err = nc_inq_varndims(*ncid, *varid, &ndims );
 	if( err != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_get_vara_double while getting ndims: %s\n", 
+		REprintf( "Error in R_nc_get_vara_double while getting ndims: %s\n", 
 			nc_strerror(*retval) );
 
 	for( i=0; i<ndims; i++ ) {
@@ -189,19 +190,19 @@ void R_nc_get_vara_double( int *ncid, int *varid, int *start,
 	*retval = nc_get_vara_double(*ncid, *varid, s_start, s_count, data );
 	if( *retval != NC_NOERR ) {
 		nc_inq_varname( *ncid, *varid, vn );
-		fprintf( stderr, "Error in R_nc_get_vara_double: %s\n", 
+		REprintf( "Error in R_nc_get_vara_double: %s\n", 
 			nc_strerror(*retval) );
-		fprintf( stderr, "Var: %s  Ndims: %d   Start: ", vn, ndims );
+		REprintf( "Var: %s  Ndims: %d   Start: ", vn, ndims );
 		for( i=0; i<ndims; i++ ) {
-		        fprintf( stderr, "%u", (unsigned int) s_start[i] );
+			REprintf( "%u", (unsigned int)s_start[i] );
 			if( i < ndims-1 )
-				fprintf( stderr, "," );
+				REprintf( "," );
 			}
-		fprintf( stderr, "Count: " );
+		REprintf( "Count: " );
 		for( i=0; i<ndims; i++ ) {
-		    fprintf( stderr, "%u", (unsigned int) s_count[i] );
+			REprintf( "%u", (unsigned int)s_count[i] );
 			if( i < ndims-1 )
-				fprintf( stderr, "," );
+				REprintf( "," );
 			}
 		}
 }
@@ -219,7 +220,7 @@ void R_nc_get_vara_int( int *ncid, int *varid, int *start,
 
 	err = nc_inq_varndims(*ncid, *varid, &ndims );
 	if( err != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_get_vara_int while getting ndims: %s\n", 
+		REprintf( "Error in R_nc_get_vara_int while getting ndims: %s\n", 
 			nc_strerror(*retval) );
 
 	tot_size = 1L;
@@ -232,19 +233,19 @@ void R_nc_get_vara_int( int *ncid, int *varid, int *start,
 	*retval = nc_get_vara_int(*ncid, *varid, s_start, s_count, data );
 	if( *retval != NC_NOERR ) {
 		nc_inq_varname( *ncid, *varid, vn );
-		fprintf( stderr, "Error in R_nc_get_vara_int: %s\n", 
+		REprintf( "Error in R_nc_get_vara_int: %s\n", 
 			nc_strerror(*retval) );
-		fprintf( stderr, "Var: %s  Ndims: %d   Start: ", vn, ndims );
+		REprintf( "Var: %s  Ndims: %d   Start: ", vn, ndims );
 		for( i=0; i<ndims; i++ ) {
-		        fprintf( stderr, "%u", (unsigned int) s_start[i] );
+			REprintf( "%u", (unsigned int)s_start[i] );
 			if( i < ndims-1 )
-				fprintf( stderr, "," );
+				REprintf( "," );
 			}
-		fprintf( stderr, "Count: " );
+		REprintf( "Count: " );
 		for( i=0; i<ndims; i++ ) {
-		        fprintf( stderr, "%u", (unsigned int) s_count[i] );
+			REprintf( "%u", (unsigned int)s_count[i] );
 			if( i < ndims-1 )
-				fprintf( stderr, "," );
+				REprintf( "," );
 			}
 		}
 
@@ -273,7 +274,7 @@ void R_nc_get_vara_text( int *ncid, int *varid, int *start,
 
 	err = nc_inq_varndims(*ncid, *varid, &ndims );
 	if( err != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_get_vara_text while getting ndims: %s\n", 
+		REprintf( "Error in R_nc_get_vara_text while getting ndims: %s\n", 
 			nc_strerror(*retval) );
 
 	nstr = 1L;
@@ -289,19 +290,19 @@ void R_nc_get_vara_text( int *ncid, int *varid, int *start,
 
 	if( *retval != NC_NOERR ) {
 		nc_inq_varname( *ncid, *varid, vn );
-		fprintf( stderr, "Error in R_nc_get_vara_text: %s\n", 
+		REprintf( "Error in R_nc_get_vara_text: %s\n", 
 			nc_strerror(*retval) );
-		fprintf( stderr, "Var: %s  Ndims: %d   Start: ", vn, ndims );
+		REprintf( "Var: %s  Ndims: %d   Start: ", vn, ndims );
 		for( i=0; i<ndims; i++ ) {
-		    fprintf( stderr, "%u", (unsigned int) s_start[i] );
+			REprintf( "%u", (unsigned int)s_start[i] );
 			if( i < ndims-1 )
-				fprintf( stderr, "," );
+				REprintf( "," );
 			}
-		fprintf( stderr, "Count: " );
+		REprintf( "Count: " );
 		for( i=0; i<ndims; i++ ) {
-		    fprintf( stderr, "%u", (unsigned int) s_count[i] );
+			REprintf( "%u", (unsigned int)s_count[i] );
 			if( i < ndims-1 )
-				fprintf( stderr, "," );
+				REprintf( "," );
 			}
 		}
 
@@ -337,7 +338,7 @@ void R_nc_inq_unlimdim( int *ncid, int *unlimdimid, int *retval )
 {
 	*retval = nc_inq_unlimdim(*ncid, unlimdimid );
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_inq_unlimdim: %s\n", 
+		REprintf( "Error in R_nc_inq_unlimdim: %s\n", 
 			nc_strerror(*retval) );
 }
 
@@ -350,7 +351,7 @@ void R_nc_inq_dim( int *ncid, int *dimid, char **dimname, int *dimlen,
 
 	*retval = nc_inq_dim(*ncid, *dimid, name, &len);
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_inq_dim: %s\n", 
+		REprintf( "Error in R_nc_inq_dim: %s\n", 
 			nc_strerror(*retval) );
 	*dimlen = (int)len;
 	/* NOTE NOTE NOTE!! This assumes that the calling process
@@ -365,7 +366,7 @@ void R_nc_inq( int *ncid, int *ndims, int *nvars, int *natts,
 {
 	*retval = nc_inq(*ncid, ndims, nvars, natts, unlimdimid );
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_inq: %s\n", 
+		REprintf( "Error in R_nc_inq: %s\n", 
 			nc_strerror(*retval) );
 }
 
@@ -382,14 +383,14 @@ void R_nc_open( char **filename, int *cmode, int *ncid, int *retval )
 		nc_mode = NC_WRITE;
 	else
 		{
-		fprintf( stderr, "Error in R_nc_open: bad mode passed.  Must be 0 (read) or 1 (write)\n");
+		REprintf( "Error in R_nc_open: bad mode passed.  Must be 0 (read) or 1 (write)\n");
 		*retval = -1;
 		return;
 		}
 
 	*retval = nc_open(R_ExpandFileName(filename[0]), nc_mode, ncid);
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_open: %s\n", 
+		REprintf( "Error in R_nc_open: %s\n", 
 			nc_strerror(*retval) );
 }
 
@@ -398,7 +399,7 @@ void R_nc_create( char **filename, int *cmode, int *ncid, int *retval )
 {
 	*retval = nc_create(R_ExpandFileName(filename[0]), *cmode, ncid);
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_create: %s\n", 
+		REprintf( "Error in R_nc_create: %s\n", 
 			nc_strerror(*retval) );
 }
 
@@ -433,7 +434,7 @@ void R_nc_put_att_int( int *ncid, int *varid, char **attname,
 	*retval = nc_put_att_int(*ncid, *varid, attname[0], 
 		ttc, *natts, attribute );
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_put_att_int: %s\n", 
+		REprintf( "Error in R_nc_put_att_int: %s\n", 
 			nc_strerror(*retval) );
 }
 
@@ -455,7 +456,7 @@ void R_nc_put_att_double( int *ncid, int *varid, char **attname,
 	*retval = nc_put_att_double(*ncid, *varid, attname[0], 
 		ttc, *natts, attribute );
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_put_att_double: %s\n", 
+		REprintf( "Error in R_nc_put_att_double: %s\n", 
 			nc_strerror(*retval) );
 }
 
@@ -473,7 +474,7 @@ void R_nc_put_att_text( int *ncid, int *varid, char **attname,
 	*retval = nc_put_att_text(*ncid, *varid, attname[0], 
 		attlen, attribute[0] );
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_put_att_text: %s\n", 
+		REprintf( "Error in R_nc_put_att_text: %s\n", 
 			nc_strerror(*retval) );
 }
 
@@ -508,17 +509,17 @@ void R_nc_inq_att( int *ncid, int *varid, char **attname, int *type,
 
 	*retval = nc_inq_att(*ncid, *varid, attname[0], &nctype, &s_attlen );
 	if( (*retval != 0) && (*retval != NC_ENOTATT)) 
-		fprintf( stderr, "Error in R_nc_inq_att: while looking for attribute %s, got error %s\n",
+		REprintf( "Error in R_nc_inq_att: while looking for attribute %s, got error %s\n",
 			attname[0], nc_strerror(*retval) );
 
 	if( *retval == 0 ) {
 		*type = R_nc_nctype_to_Rtypecode(nctype);
 		if( *type == -1 ) {
 			if( nctype == NC_BYTE )
-				fprintf( stderr, "Error in R_nc_inq_att: not set up to handle attributes of type \"BYTE\"!  Netcdf type code: %d Attribute name: %s\n", nctype, attname[0] );
+				REprintf( "Error in R_nc_inq_att: not set up to handle attributes of type \"BYTE\"!  Netcdf type code: %d Attribute name: %s\n", nctype, attname[0] );
 			else
 				{
-				fprintf( stderr, "Error in R_nc_inq_att: not set up to handle attributes of this type!  Netcdf type code: %d Attribute name: %s\n", nctype, attname[0] );
+				REprintf( "Error in R_nc_inq_att: not set up to handle attributes of this type!  Netcdf type code: %d Attribute name: %s\n", nctype, attname[0] );
 				*retval = -1;
 				}
 			}
@@ -560,15 +561,15 @@ void R_nc_put_vara_double( int *ncid, int *varid, int *start,
 	verbose = 0;
 
 	if( verbose ) 
-		fprintf( stderr, "R_nc_put_vara_double: entering with ncid=%d, varid=%d\n", *ncid, *varid );
+		REprintf( "R_nc_put_vara_double: entering with ncid=%d, varid=%d\n", *ncid, *varid );
 
 	/* Get # of dims for this var */
 	err = nc_inq_ndims( *ncid, &ndims );
 	if( err != NC_NOERR )
-		fprintf( stderr, "Error on nc_inq_ndims call in R_nc_put_vara_double: %s\n", 
+		REprintf( "Error on nc_inq_ndims call in R_nc_put_vara_double: %s\n", 
 			nc_strerror(*retval) );
 	if( verbose ) 
-		fprintf( stderr, "R_nc_put_vara_double: for this var ndims=%d\n", ndims );
+		REprintf( "R_nc_put_vara_double: for this var ndims=%d\n", ndims );
 
 	/* Copy over from ints to size_t */
 	for( i=0; i<ndims; i++ ) {
@@ -577,20 +578,20 @@ void R_nc_put_vara_double( int *ncid, int *varid, int *start,
 		} 
 
 	if( verbose ) {
-		fprintf( stderr, "R_nc_put_vara_double: about to write with start=" );
+		REprintf( "R_nc_put_vara_double: about to write with start=" );
 		for( i=0; i<ndims; i++ ) 
-		    fprintf(stderr,"%d ", (unsigned int) s_start[i] );
-		fprintf( stderr, "   count=" );
+			REprintf("%d ", s_start[i] );
+		REprintf( "   count=" );
 		for( i=0; i<ndims; i++ ) 
-		    fprintf(stderr,"%d ", (unsigned int) s_count[i] );
+			REprintf("%d ", s_count[i] );
 		}
 
 	*retval = nc_put_vara_double(*ncid, *varid, s_start, s_count, data );
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_put_vara_double: %s\n", 
+		REprintf( "Error in R_nc_put_vara_double: %s\n", 
 			nc_strerror(*retval) );
 	if( verbose ) 
-		fprintf( stderr, "R_nc_put_vara_double: returning with errval=%d\n", *retval );
+		REprintf( "R_nc_put_vara_double: returning with errval=%d\n", *retval );
 }
 
 /*********************************************************************/
@@ -603,7 +604,7 @@ void R_nc_put_vara_int( int *ncid, int *varid, int *start,
 	/* Get # of dims for this var */
 	err = nc_inq_ndims( *ncid, &ndims );
 	if( err != NC_NOERR )
-		fprintf( stderr, "Error on nc_inq_ndims call in R_nc_put_vara_int: %s\n", 
+		REprintf( "Error on nc_inq_ndims call in R_nc_put_vara_int: %s\n", 
 			nc_strerror(*retval) );
 
 	/* Copy over from ints to size_t */
@@ -614,7 +615,7 @@ void R_nc_put_vara_int( int *ncid, int *varid, int *start,
 
 	*retval = nc_put_vara_int(*ncid, *varid, s_start, s_count, data );
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_put_vara_int: %s\n", 
+		REprintf( "Error in R_nc_put_vara_int: %s\n", 
 			nc_strerror(*retval) );
 }
 
@@ -623,7 +624,7 @@ void R_nc_put_var_int( int *ncid, int *varid, int *data, int *retval )
 {
 	*retval = nc_put_var_int(*ncid, *varid, data );
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_put_var_int: %s\n", 
+		REprintf( "Error in R_nc_put_var_int: %s\n", 
 			nc_strerror(*retval) );
 }
 
@@ -632,7 +633,7 @@ void R_nc_put_var_double( int *ncid, int *varid, double *data, int *retval )
 {
 	*retval = nc_put_var_double(*ncid, *varid, data );
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_put_var_double: %s\n", 
+		REprintf( "Error in R_nc_put_var_double: %s\n", 
 			nc_strerror(*retval) );
 }
 
@@ -647,7 +648,7 @@ void R_nc_put_vara_text( int *ncid, int *varid, int *start,
 	/* Get # of dims for this var */
 	err = nc_inq_varndims( *ncid, *varid, &ndims );
 	if( err != NC_NOERR )
-		fprintf( stderr, "Error on nc_inq_ndims call in R_nc_put_vara_int: %s\n", 
+		REprintf("Error on nc_inq_varndims call in R_nc_put_vara_int: %s\n", 
 			nc_strerror(*retval) );
 
 	/* Copy over from ints to size_t.  Remember things are in C style at
@@ -667,7 +668,7 @@ void R_nc_put_vara_text( int *ncid, int *varid, int *start,
 	if( ndims == 1 ) {
 		*retval = nc_put_vara_text(*ncid, *varid, s_start, s_count, data[0] );
 		if( *retval != NC_NOERR ) 
-			fprintf( stderr, "Error in R_nc_put_vara_int: %s\n", 
+			REprintf("Error in R_nc_put_vara_int: %s\n", 
 				nc_strerror(*retval) );
 		}
 
@@ -679,11 +680,11 @@ void R_nc_put_vara_text( int *ncid, int *varid, int *start,
 			slen2use = ((slen < strlen(data[i])) ? slen : strlen(data[i]));
 			s_count[idx_string] = 1L;
 			s_count[idx_char  ] = slen2use;
-			s_start[idx_string] = i;
+			s_start[idx_string] = i + start[idx_string];
 			s_start[idx_char  ] = 0L;
 			*retval = nc_put_vara_text(*ncid, *varid, s_start, s_count, data[i] );
 			if( *retval != NC_NOERR ) {
-				fprintf( stderr, "Error in R_nc_put_vara_text: %s\n", 
+				REprintf("Error in R_nc_put_vara_text: %s\n", 
 					nc_strerror(*retval) );
 				return;
 				}
@@ -704,7 +705,7 @@ void R_nc_put_vara_text( int *ncid, int *varid, int *start,
 			s_start[2] = 0L;
 			*retval = nc_put_vara_text(*ncid, *varid, s_start, s_count, data[stridx++] );
 			if( *retval != NC_NOERR ) {
-				fprintf( stderr, "Error in R_nc_put_vara_text: %s\n", 
+				REprintf("Error in R_nc_put_vara_text: %s\n", 
 					nc_strerror(*retval) );
 				return;
 				}
@@ -729,7 +730,7 @@ void R_nc_put_vara_text( int *ncid, int *varid, int *start,
 			s_start[3] = 0L;
 			*retval = nc_put_vara_text(*ncid, *varid, s_start, s_count, data[stridx++] );
 			if( *retval != NC_NOERR ) {
-				fprintf( stderr, "Error in R_nc_put_vara_text: %s\n", 
+				REprintf("Error in R_nc_put_vara_text: %s\n", 
 					nc_strerror(*retval) );
 				return;
 				}
@@ -738,7 +739,7 @@ void R_nc_put_vara_text( int *ncid, int *varid, int *start,
 	else
 		{
 		*retval = -1;
-		printf("Error in R_nc_put_vara_text: unhandled case.  I only handle char dims with # of dims up to 4.  Was passed # dims = %d\n", ndims );
+		REprintf("Error in R_nc_put_vara_text: unhandled case.  I only handle char dims with # of dims up to 4.  Was passed # dims = %d\n", ndims );
 		return;
 		}
 }
@@ -750,12 +751,12 @@ void R_nc_def_var_byte( int *ncid, char **varname, int *ndims, int *dimids,
 	*retval = nc_def_var(*ncid, varname[0], 
 		NC_BYTE, *ndims, dimids, varid );
 	if( *retval != NC_NOERR ) {
-		fprintf( stderr, "Error in R_nc_def_var_byte: %s\n", 
+		REprintf( "Error in R_nc_def_var_byte: %s\n", 
 			nc_strerror(*retval) );
-		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
+		REprintf( "Name of variable that the error occurred on: \"%s\"\n", 
 			varname[0] );
 		if( *retval == NC_ENAMEINUSE )
-			fprintf( stderr, "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
+			REprintf( "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
 		}
 }
 
@@ -766,12 +767,12 @@ void R_nc_def_var_int( int *ncid, char **varname, int *ndims, int *dimids,
 	*retval = nc_def_var(*ncid, varname[0], 
 		NC_INT, *ndims, dimids, varid );
 	if( *retval != NC_NOERR ) {
-		fprintf( stderr, "Error in R_nc_def_var_int: %s\n", 
+		REprintf( "Error in R_nc_def_var_int: %s\n", 
 			nc_strerror(*retval) );
-		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
+		REprintf( "Name of variable that the error occurred on: \"%s\"\n", 
 			varname[0] );
 		if( *retval == NC_ENAMEINUSE )
-			fprintf( stderr, "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
+			REprintf( "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
 		}
 }
 
@@ -782,12 +783,12 @@ void R_nc_def_var_short( int *ncid, char **varname, int *ndims, int *dimids,
 	*retval = nc_def_var(*ncid, varname[0], 
 		NC_SHORT, *ndims, dimids, varid );
 	if( *retval != NC_NOERR ) {
-		fprintf( stderr, "Error in R_nc_def_var_short: %s\n", 
+		REprintf( "Error in R_nc_def_var_short: %s\n", 
 			nc_strerror(*retval) );
-		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
+		REprintf( "Name of variable that the error occurred on: \"%s\"\n", 
 			varname[0] );
 		if( *retval == NC_ENAMEINUSE )
-			fprintf( stderr, "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
+			REprintf( "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
 		}
 }
 
@@ -798,12 +799,12 @@ void R_nc_def_var_float( int *ncid, char **varname, int *ndims, int *dimids,
 	*retval = nc_def_var(*ncid, varname[0], 
 		NC_FLOAT, *ndims, dimids, varid );
 	if( *retval != NC_NOERR ) {
-		fprintf( stderr, "Error in R_nc_def_var_float: %s\n", 
+		REprintf( "Error in R_nc_def_var_float: %s\n", 
 			nc_strerror(*retval) );
-		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
+		REprintf( "Name of variable that the error occurred on: \"%s\"\n", 
 			varname[0] );
 		if( *retval == NC_ENAMEINUSE )
-			fprintf( stderr, "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
+			REprintf( "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
 		}
 }
 
@@ -814,12 +815,12 @@ void R_nc_def_var_double( int *ncid, char **varname, int *ndims, int *dimids,
 	*retval = nc_def_var(*ncid, varname[0], 
 		NC_DOUBLE, *ndims, dimids, varid );
 	if( *retval != NC_NOERR ) {
-		fprintf( stderr, "Error in R_nc_def_var_double: %s\n", 
+		REprintf( "Error in R_nc_def_var_double: %s\n", 
 			nc_strerror(*retval) );
-		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
+		REprintf( "Name of variable that the error occurred on: \"%s\"\n", 
 			varname[0] );
 		if( *retval == NC_ENAMEINUSE )
-			fprintf( stderr, "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
+			REprintf( "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
 		}
 }
 
@@ -830,12 +831,12 @@ void R_nc_def_var_char( int *ncid, char **varname, int *ndims, int *dimids,
 	*retval = nc_def_var(*ncid, varname[0], 
 		NC_CHAR, *ndims, dimids, varid );
 	if( *retval != NC_NOERR ) {
-		fprintf( stderr, "Error in R_nc_def_var_char: %s\n", 
+		REprintf( "Error in R_nc_def_var_char: %s\n", 
 			nc_strerror(*retval) );
-		fprintf( stderr, "Name of variable that the error occurred on: \"%s\"\n", 
+		REprintf( "Name of variable that the error occurred on: \"%s\"\n", 
 			varname[0] );
 		if( *retval == NC_ENAMEINUSE )
-			fprintf( stderr, "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
+			REprintf( "I.e., you are trying to add a variable with that name to the file, but it ALREADY has a variable with that name!\n");
 		}
 }
 
@@ -846,7 +847,7 @@ void R_nc_def_dim( int *ncid, char **dimname, int *size, int *dimid,
 	*retval = nc_def_dim(*ncid, dimname[0], 
 		*size, dimid );
 	if( *retval != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_def_dim: %s\n", 
+		REprintf( "Error in R_nc_def_dim: %s\n", 
 			nc_strerror(*retval) );
 }
 
@@ -856,7 +857,7 @@ void R_nc_redef( int *ncid )
 	int	err;
 	err = nc_redef(*ncid);
 	if( err != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_redef: %s\n", 
+		REprintf( "Error in R_nc_redef: %s\n", 
 			nc_strerror(err) );
 }
 
