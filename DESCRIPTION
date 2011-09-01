@@ -1,7 +1,7 @@
 Package: ncdf
 Title: Interface to Unidata netCDF data files
 Maintainer: Brian Ripley <ripley@stats.ox.ac.uk>
-Version: 1.6.5
+Version: 1.6.6
 Author: David Pierce <dpierce@ucsd.edu>
 Description: This package provides a high-level R interface to
         Unidata's netCDF data files, which are portable across
@@ -28,10 +28,9 @@ Description: This package provides a high-level R interface to
         each dimension.  This really can be ambiguous when using an
         unlimited dimension. I always specify both start and count when
         writing to a variable with an unlimited dimension, and suggest
-        you do as well.  I make require this in a future release, as it
+        you do as well.  I may require this in a future release, as it
         seems to cause people problems.
 License: GPL (>= 2)
-URL: http://cirrus.ucsd.edu/~pierce/ncdf
-Packaged: 2011-01-10 09:27:36 UTC; ripley
+Packaged: 2011-09-01 09:09:24 UTC; ripley
 Repository: CRAN
-Date/Publication: 2011-01-10 10:35:06
+Date/Publication: 2011-09-02 11:16:12

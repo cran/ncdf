@@ -18,7 +18,7 @@ void R_nc_enddef( int *ncid )
 	int	err;
 	err = nc_enddef(*ncid);
 	if( err != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_enddef: %s\n", 
+		REprintf("Error in R_nc_enddef: %s\n", 
 			nc_strerror(err) );
 }
 
@@ -28,7 +28,7 @@ void R_nc_sync( int *ncid )
 	int	err;
 	err = nc_sync(*ncid);
 	if( err != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_sync: %s\n", 
+		REprintf("Error in R_nc_sync: %s\n", 
 			nc_strerror(err) );
 }
 
@@ -38,7 +38,7 @@ void R_nc_close( int *ncid )
 	int	err;
 	err = nc_close(*ncid);
 	if( err != NC_NOERR ) 
-		fprintf( stderr, "Error in R_nc_close: %s\n", 
+		REprintf("Error in R_nc_close: %s\n", 
 			nc_strerror(err) );
 }
 

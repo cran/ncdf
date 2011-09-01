@@ -51,13 +51,13 @@ void R_ncu_calc_start_count( int ncid, int varid, int *start_arg, int len_start,
 	int i, j, tmp[MAX_NC_DIMS], n_nondegen_dims;	
 
 	/*
-	fprintf( stderr, "Passed count: [" );
+	REprintf("Passed count: [" );
 	for( i=0; i<len_count; i++ ) {
-		fprintf( stderr, "%d", count_arg[i] );
+		REprintf("%d", count_arg[i] );
 		if( i < (len_count-1))
-			fprintf( stderr, "," );
+			REprintf("," );
 		}
-	fprintf( stderr, "]\n" );
+	REprintf("]\n" );
 	*/
 
 	/*---------------------------------------------------------------- 
@@ -194,13 +194,13 @@ void R_ncu_calc_start_count( int ncid, int varid, int *start_arg, int len_start,
 		}
 
 	/*
-	fprintf( stderr, "Final count to use: [" );
+	REprintf("Final count to use: [" );
 	for( i=0; i<len_count; i++ ) {
-		fprintf( stderr, "%ld", count[i] );
+		REprintf("%ld", count[i] );
 		if( i < (len_count-1))
-			fprintf( stderr, "," );
+			REprintf("," );
 		}
-	fprintf( stderr, "]\n" );
+	REprintf("]\n" );
 	*/
 }
 
@@ -247,11 +247,10 @@ SEXP R_nc_get_vara_numvarid( SEXP sx_nc, SEXP sx_varid, SEXP sx_start, SEXP sx_c
 	int 	varid, ncid, ndims, len_start, len_count, i, j, ierr,
 		start_arg[MAX_NC_DIMS], count_arg[MAX_NC_DIMS],
 		*data_addr_i, missval_i, ndims_cgt1;
-	SEXP 	rv_data = R_NilValue /* -Wall */, sx_ncdf_var, sx_dim;
+	SEXP 	rv_data = R_NilValue /* -Wall */, sx_dim;
 	size_t	start[MAX_NC_DIMS], count[MAX_NC_DIMS], varsize[MAX_NC_DIMS], tot_var_size,
 		i_szt;
 	double	*data_addr_d, missval_d, missval_tol;
-	const char	*filename;
 	nc_type	vartype;
 
 	/*--------------------------------------------------------------------------- 
@@ -265,11 +264,9 @@ SEXP R_nc_get_vara_numvarid( SEXP sx_nc, SEXP sx_varid, SEXP sx_start, SEXP sx_c
 	 * 'sx_nc' is guaranteed to be the full object of class 'ncdf'.
 	 *----------------------------------------------------------------------------*/
 
-	filename = CHAR(STRING_ELT(R_ncu_getListElement( sx_nc, "filename" ),0));
 
 	varid = INTEGER(sx_varid)[0];
 	ncid  = INTEGER(R_ncu_getListElement( sx_nc, "id" ))[0];
-	sx_ncdf_var = R_ncu_getListElement( sx_nc, "var" );
 
 	/*-----------------------------------------------------------------------
 	 * Copy passed start and count to local vars so we can modify them safely
@@ -479,14 +476,14 @@ SEXP R_ncu_getListElement(SEXP list, char *str)
 	SEXP elmt = R_NilValue, names = getAttrib(list, R_NamesSymbol);
 	int i;
 
-/*fprintf( stderr, "list has %d elements; looking for one named %s\n", length(list), str);*/
+/*REprintf("list has %d elements; looking for one named %s\n", length(list), str);*/
 	for (i = 0; i < length(list); i++) {
-/*fprintf( stderr, "element %d is named %s\n", i, CHAR(STRING_ELT(names, i)) );*/
+/*REprintf("element %d is named %s\n", i, CHAR(STRING_ELT(names, i)) );*/
 		if(strcmp(CHAR(STRING_ELT(names, i)), str) == 0) {
 			return(VECTOR_ELT(list, i));
 			}
 		}
 
-fprintf( stderr, "warning, no match found for element %s\n", str );
+	REprintf("warning, no match found for element %s\n", str );
 	return elmt;
 }
