@@ -8,7 +8,7 @@
 # NOT in the C interface code!!!   This means that it is
 # always the responsibility of the R program to take these
 # differences into account.  From the point of view of an
-# R program that calls any of these functions, they are 
+# R program that calls any of these functions, they are
 # strictly R compliant (Fortran order, counting starts at 1).
 #
 # David W. Pierce
@@ -34,13 +34,13 @@
 #		from the netcdf file to which element in the list of vars this var is.
 #	writable: TRUE or FALSE
 #
-# class: dim.ncdf (returned by dim.def.ncdf, which creates a NEW 
+# class: dim.ncdf (returned by dim.def.ncdf, which creates a NEW
 #		netCDF dimension in memory, and part of the list of dims
 #		in a ncdf object. NOTE that this is NOT what is returned
 #		by dim.inq.ncdf, which is the low-level netCDF dim, not
 #		the user-level R version of a netCDF dim.
 #     *	name	: character dim name
-#	units	: character units in udunits format.  
+#	units	: character units in udunits format.
 #	vals	: a vector of dimension values
 #     *	len	: size of this dimension
 #	id	: dimension ID in the netcdf file, if applicable
@@ -60,7 +60,7 @@
 #		var, NOT the user-level R version of a netCDF var.
 #	name	: character var name
 #	units	: character units in udunits format
-#	missval	: the 'missing_value' attribute, or defaults to default.missval.ncdf(). NOTE: 
+#	missval	: the 'missing_value' attribute, or defaults to default.missval.ncdf(). NOTE:
 #		  if the var has no missing value then this is 'NA'.  This does not mean
 #		  that the missing value is NA -- the missing value cannot be NA.  It means
 #		  the variable has no missing value.  For instance, character variables have
@@ -73,7 +73,7 @@
 #	varsize : a convenience array that gives the (X,Y,Z,T) size of
 #		  the variable.
 #	prec    : The precision of the ON-DISK representation of the
-#		  variable.  Can be "byte", "short", "float", "double", 
+#		  variable.  Can be "byte", "short", "float", "double",
 #	    	  "integer", or "char".
 #
 # class: vals.ncdf (returned by get.var.ncdf)
@@ -82,7 +82,7 @@
 #
 #=================================================================
 version.ncdf <- function() {
-	
+
 	return("1.6")
 
 }
@@ -115,13 +115,13 @@ blankstring.ncdf <- function( n ) {
 #=================================================================
 # This is where the default missing value for vars is set.
 #
-default.missval.ncdf <- function()  
+default.missval.ncdf <- function()
 {
 	return(1.e30)
 }
 
 #=================================================================
-# Returns -1 if element 'el' is not in the list, and 
+# Returns -1 if element 'el' is not in the list, and
 # if 'el' IS in the list, returns which number it is.
 #
 in.list.name.ncdf <- function( el, list ) {
@@ -225,13 +225,13 @@ print.ncdf <- function( x, ... ) {
 # NOTE that the passed dimentions (in this example, "lon" and "lat"
 # should have been made by "ncdf.def.dim", and so are of class
 # "dim.ncdf".   Argument "prec" will indicate what precision the variable
-# is made on the disk.  Allowed values are "short", "integer", "single", 
+# is made on the disk.  Allowed values are "short", "integer", "single",
 # "double", "byte", and "char".
 # 'missval' is the value to be assigned to the 'missing_value' attribute
 # for the variable.  It should be a number representable in the precision-type
 # of the variable.  So, for example, for single precision, a floating point
 # number with magnitude less than 1.e36 should be used.  As a special value,
-# if missval is set to NA, then *no* missing value will be created for the 
+# if missval is set to NA, then *no* missing value will be created for the
 # variable.
 #
 var.def.ncdf <- function( name, units, dim, missval, longname=name, prec="single" ) {
@@ -254,13 +254,13 @@ var.def.ncdf <- function( name, units, dim, missval, longname=name, prec="single
 	if( prec == "float" )
 		prec <- 'single'
 
-	if( (prec != "short")   && (prec != "single") && (prec != "double") && 
+	if( (prec != "short")   && (prec != "single") && (prec != "double") &&
 	    (prec != "integer") && (prec != "char")   && (prec != "byte"))
 		stop(paste("var.def.ncdf: error: unknown precision specified:",prec,". Known values: short single double integer char byte"))
 	var$prec <- prec
 
 	#-----------------------------------------------------
-	# Have to figure out if 'dim' is a dim.ncdf object or 
+	# Have to figure out if 'dim' is a dim.ncdf object or
 	# a LIST of dim.ncdf objects.
 	#-----------------------------------------------------
 	if( is.character(class(dim)) && (class(dim) == "dim.ncdf") )
@@ -281,7 +281,7 @@ var.def.ncdf <- function( name, units, dim, missval, longname=name, prec="single
 	varunlimited <- FALSE
 	if( var$ndims != 0 ) {
 		for( i in 1:var$ndims ) {
-			if( var$dim[[i]]$unlim ) 
+			if( var$dim[[i]]$unlim )
 				varunlimited <- TRUE
 			}
 		}
@@ -294,11 +294,11 @@ var.def.ncdf <- function( name, units, dim, missval, longname=name, prec="single
 # This is the public interface for opening an already-existing
 # netCDF file.  If you want to create a NEW netCDF file, use
 # create.ncdf instead.  This returns an object of class 'ncdf',
-# used to access netCDF functions.  If you want to modify an 
+# used to access netCDF functions.  If you want to modify an
 # already-existing netCDF file, use this function and set write=T.
 # By default, this will read in the values of the unlimited dimension
 # along with the values of all the other dimensions.  Since this
-# can be time comsuming, there is the option of setting 'readunlim' 
+# can be time comsuming, there is the option of setting 'readunlim'
 # to 'FALSE', which will avoid this behavor.  Then you must read
 # in the values yourself with a 'get.var.ncdf' call, instead of
 # accessing the ncid$dim[[DIMNAME]]$vals array.
@@ -323,7 +323,7 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 		id=as.integer(rv$id),
 		error=as.integer(rv$error),
 		PACKAGE="ncdf")
-	if( rv$error != 0 ) 
+	if( rv$error != 0 )
 		stop(paste("Error in open.ncdf trying to open file",con))
 	if( verbose )
 		print(paste("open.ncdf: back from call to R_nc_open, ncid=",rv$id))
@@ -354,7 +354,7 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 		unlimdimid=as.integer(rv$unlimdimid),
 		error=as.integer(rv$error),
 		PACKAGE="ncdf")
-	if( rv$error != 0 ) 
+	if( rv$error != 0 )
 		stop(paste("R_nc_inq returned error on file",con,"!"))
 	if( verbose )
 		print(paste("open.ncdf: back from call to R_nc_inq for id=",nc$id,"   ndims=",rv$ndims,
@@ -363,24 +363,24 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 	nc$natts        <- rv$natts
 	nc$unlimdimid   <- rv$unlimdimid + 1	# Change from C to R convention
 	nc$filename     <- con
-	nc$varid2Rindex <- rep(0,rv$nvars)	
+	nc$varid2Rindex <- rep(0,rv$nvars)
 	nc$writable     <- write
 
 	#-----------------------------------------------
 	# Get all the dimensions that this file has.
-	# Get their values as well (for caching).  
+	# Get their values as well (for caching).
 	#-----------------------------------------------
 	nc$dim   <- list()
 	dimnames <- character()
-	for( i in 1:nc$ndims ) {	
+	for( i in 1:nc$ndims ) {
 		if( verbose )
 			print(paste("open.ncdf: getting dim info for dim number",i))
 		#-----------------------------------------------------------
 		# As a general note, the function dim.inq.ncdf does NOT
-		# return a full-fledged "dim.ncdf" object. It returns 
-		# only a subset of fields that directly correspond to 
+		# return a full-fledged "dim.ncdf" object. It returns
+		# only a subset of fields that directly correspond to
 		# a low-level, netCDF dimension in a file.  We now fill
-		# out the rest of the fields to make it into a real dim.ncdf 
+		# out the rest of the fields to make it into a real dim.ncdf
 		# object.
 		#-----------------------------------------------------------
 		d          <- dim.inq.ncdf(nc,i)
@@ -393,7 +393,7 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 			d$units <- ""
 			d$create_dimvar <- FALSE	# in case this dim is passed to create.ncdf()
 			}
-		else {	
+		else {
 			# This dim has a dimvar -- get its properties
 			if( verbose )
 				print(paste("open.ncdf: getting dimvar info for dim ",d$name))
@@ -426,7 +426,7 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 		print("open.ncdf: setting dim$<names> to:")
 		print(dimnames)
 		}
-	
+
 	#-------------------------------------------
 	# Get all the vars that this file has.  Note
 	# that dimvars are NOT included in the count
@@ -469,15 +469,23 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 			# a default value if it does not have one
 			#----------------------------------------
 			mv <- att.get.ncdf( nc, i, "missing_value" )
-			if( mv$hasatt )
-				v$missval <- mv$value
-			else if( (v$prec=="float") || (v$prec=="double"))
-				v$missval <- default.missval.ncdf()
-			else
-				v$missval <- NA
+                        if( mv$hasatt )
+                            v$missval <- mv$value
+			else {
+                            ## change suggested by Jean-Olivier Irisson
+                            ## 2013-09-19
+                            mv <- att.get.ncdf( nc, i, "_FillValue" )
+                            if( mv$hasatt )
+                                v$missval <- mv$value
+                            else if( (v$prec=="float") || (v$prec=="double"))
+                                v$missval <- default.missval.ncdf()
+                            else
+                                v$missval <- NA
+                        }
+
 
 			#-------------------------------------------
-			# Get add_offset and scale_factor attributes 
+			# Get add_offset and scale_factor attributes
 			#-------------------------------------------
 			ao <- att.get.ncdf( nc, i, "add_offset" )
 			if( ao$hasatt ) {
@@ -493,9 +501,9 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 				}
 			else
 				v$hasScaleFact <- FALSE
-			
+
 			nc$var[[nc$nvars]] <- v
-			nc$varid2Rindex[i] <- nc$nvars 
+			nc$varid2Rindex[i] <- nc$nvars
 			varnames <- append(varnames,v$name)
 			if( verbose ) {
 				print("-----------------------")
@@ -521,7 +529,7 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 # is used when a file has not been created on disk yet, or when
 # an existing disk file has been opened to be writable.
 # 'varid' may be a character string with the var's name,
-# a var.ncdf class, or an integer.  If it is an integer, it is 
+# a var.ncdf class, or an integer.  If it is an integer, it is
 # R-style varid, i.e., the varid as reported by a C function call
 # but incremented by one (to adjust for R's counting, which starts
 # at 1).  Note that this is the number stored in a var.ncdf class
@@ -540,7 +548,7 @@ open.ncdf <- function( con, write=FALSE, readunlim=TRUE, verbose=FALSE, ... ) {
 #
 set.missval.ncdf <- function( nc, varid, missval ) {
 
-	if( class(nc) != "ncdf" ) 
+	if( class(nc) != "ncdf" )
 		stop("set.missval.ncdf: passed nc NOT of class ncdf.file!")
 
 	#------------------------------------------------------
@@ -578,9 +586,9 @@ create.ncdf <- function( filename, vars, verbose=FALSE ) {
 
 	#---------------------------------------------------
 	# Have to tell if the input vars.orig is a single
-	# var or a list of vars.   Do it by examining 
-	# vars.orig$class.  If vars.orig is a single var, 
-	# then this will equal "var.ncdf"; if vars.orig is a 
+	# var or a list of vars.   Do it by examining
+	# vars.orig$class.  If vars.orig is a single var,
+	# then this will equal "var.ncdf"; if vars.orig is a
 	# list of vars, this will be NULL.
 	#---------------------------------------------------
 	if( is.character(class(vars)) && (class(vars) == "var.ncdf") ) {
@@ -634,7 +642,7 @@ create.ncdf <- function( filename, vars, verbose=FALSE ) {
 	# Note also that the returned 'nc' value is updated each time
 	# this subroutine is called.
 	#---------------------------------------------------------------
-	for(ivar in 1:length(vars)) 
+	for(ivar in 1:length(vars))
 		nc <- var.add.ncdf( nc, vars[[ivar]], verbose=verbose, indefine=TRUE )
 
 	#-----------------------------------------------------------
@@ -661,9 +669,9 @@ create.ncdf <- function( filename, vars, verbose=FALSE ) {
 #===============================================================
 dim.same.ncdf <- function( d1, d2 ) {
 
-	if( class(d1) != "dim.ncdf" ) 
+	if( class(d1) != "dim.ncdf" )
 		stop("error, class of first passed argument is not dim.ncdf!")
-	if( class(d2) != "dim.ncdf" ) 
+	if( class(d2) != "dim.ncdf" )
 		stop("error, class of first passed argument is not dim.ncdf!")
 
 	if( d1$name != d2$name )
@@ -689,17 +697,17 @@ dim.same.ncdf <- function( d1, d2 ) {
 # routine is for.
 #
 var.add.ncdf <- function( nc, v, verbose=FALSE, indefine=FALSE ) {
-	
+
 	if( verbose )
 		print(paste("var.add.ncdf: entering with indefine=",indefine))
 
-	if( class(nc) != "ncdf" ) 
+	if( class(nc) != "ncdf" )
 		stop("var.add.ncdf: passed nc NOT of class ncdf!  The first arg to var.add.ncdf must be the return value from a call to open.ncdf(...,write=TRUE)")
 	if( verbose )
 		print(paste("var.add.ncdf: ncid of file to add to=",nc$id,
 			"   filename=",nc$filename,"    writable=",nc$writable))
 
-	if( class(v) != "var.ncdf" ) 
+	if( class(v) != "var.ncdf" )
 		stop("var.add.ncdf: passed var NOT of class var.ncdf! The second arg to var.add.ncdf must be the return value from a call to var.def.ncdf")
 	if( verbose )
 		print(paste("var.add.ncdf: varname to add=",v$name))
@@ -711,8 +719,8 @@ var.add.ncdf <- function( nc, v, verbose=FALSE, indefine=FALSE ) {
 		}
 
 	#-----------------------------------------------------
-	# Create the dims for this var.  Harder than it sounds 
-	# because we must take care not to repeat making a dim 
+	# Create the dims for this var.  Harder than it sounds
+	# because we must take care not to repeat making a dim
 	# that occurs in more than one variable.
 	#---------------------------------------------------
 	nd <- v$ndims
@@ -818,7 +826,7 @@ var.add.ncdf <- function( nc, v, verbose=FALSE, indefine=FALSE ) {
 		PACKAGE="ncdf")
 	if( verbose )
 		print(paste("create.ncdf: C call returned value",newvar$error))
-	if( newvar$error != 0 ) 
+	if( newvar$error != 0 )
 		stop("Error in create.ncdf, defining var!")
 	newvar$id <- newvar$id + 1	# Change from C to R convention
 	v$id      <- newvar$id
@@ -829,7 +837,7 @@ var.add.ncdf <- function( nc, v, verbose=FALSE, indefine=FALSE ) {
 	#------------------------------------------------------
 	# Add the attributes -- units, missing_value, long_name
 	#------------------------------------------------------
-	if( (! is.null( v$units )) && (! is.na(v$units))) 
+	if( (! is.null( v$units )) && (! is.na(v$units)))
 		att.put.ncdf( nc, newvar$id, "units", v$units, definemode=TRUE )
 
 	if( is.null( v$missval ) && ((v$prec=="single") || (v$prec=="float") || (v$prec=="double"))) {
@@ -851,7 +859,7 @@ var.add.ncdf <- function( nc, v, verbose=FALSE, indefine=FALSE ) {
 }
 
 #===============================================================
-# This is the private interface that actually does the 
+# This is the private interface that actually does the
 # netCDF calls.  User code should never go through this.
 # To make a ncdf.dim object, use ncdf.def.dim() instead.
 # This makes BOTH the dim AND the dimvar (and RETURNS
@@ -859,12 +867,12 @@ var.add.ncdf <- function( nc, v, verbose=FALSE, indefine=FALSE ) {
 #
 dim.create.ncdf <- function( nc, d, verbose=FALSE ) {
 
-	if( class(nc) != "ncdf" ) 
+	if( class(nc) != "ncdf" )
 		stop("dim.create.ncdf: passed nc NOT of class ncdf.file!")
 	if( verbose )
 		print(paste("dim.create.ncdf: entering for ncid=",nc$id))
 
-	if( class(d) != "dim.ncdf" ) 
+	if( class(d) != "dim.ncdf" )
 		stop("dim.create.ncdf: passed d NOT of class ncdf.dim!")
 	if( verbose )
 		print(paste("dim.create.ncdf: entering for dim",d$name))
@@ -887,7 +895,7 @@ dim.create.ncdf <- function( nc, d, verbose=FALSE ) {
 		id=as.integer(ncdim$id),
 		error=as.integer(ncdim$error),
 		PACKAGE="ncdf")
-	if( ncdim$error != 0 ) 
+	if( ncdim$error != 0 )
 		stop("Error in dim.create.ncdf!")
 	ncdim$id <- ncdim$id + 1	# Change from C to R convention
 
@@ -924,7 +932,7 @@ dim.create.ncdf <- function( nc, d, verbose=FALSE ) {
 				error=as.integer(dimvar$error),
 				PACKAGE="ncdf")
 			}
-		if( dimvar$error != 0 ) 
+		if( dimvar$error != 0 )
 			stop("Error defining dimvar in routine dim.create.ncdf")
 		dimvar$id <- dimvar$id + 1	# Change from C to R convention
 		dimvarid  <- dimvar$id
@@ -1018,8 +1026,8 @@ att.get.ncdf <- function( nc, varid, attname ) {
 
 	if( verbose )
 		print(paste("att.get.ncdf: entering with varid=",varid," attname=",attname))
-	
-	if( class(nc) != "ncdf" ) 
+
+	if( class(nc) != "ncdf" )
 		stop("Error: the first argument to att.get.ncdf is not of class ncdf!")
 
 	varid <- vobjtovarid( nc, varid, allowdimvar=TRUE )
@@ -1027,7 +1035,7 @@ att.get.ncdf <- function( nc, varid, attname ) {
 	retval <- list()
 
 	#----------------------------------------------------
-	# Find out if the attribute exists for this variable, 
+	# Find out if the attribute exists for this variable,
 	# and, if so, what type and length it is.
 	#----------------------------------------------------
 	rv0 <- list()
@@ -1140,7 +1148,7 @@ att.get.ncdf <- function( nc, varid, attname ) {
 # determine the precision of the attribute, UNLESS "prec" is set.
 # If "prec" is set, it always determines the created attribute type.
 #
-att.put.ncdf <- function( nc, varid, attname, attval, prec=NA, 
+att.put.ncdf <- function( nc, varid, attname, attval, prec=NA,
 	verbose=FALSE, definemode=FALSE ) {
 
 	if( verbose )
@@ -1172,7 +1180,7 @@ att.put.ncdf <- function( nc, varid, attname, attval, prec=NA,
 	#----------------------------------------------------------
 	# Note there are TWO types here.  One is the storage mode
 	# of the passed attval.  The netCDF routine to call is based
-	# on this stoarge mode. The second type is the type of 
+	# on this stoarge mode. The second type is the type of
 	# attribute to create.  This is passed as a parameter to
 	# the netcDF routine.
 	#----------------------------------------------------------
@@ -1181,7 +1189,7 @@ att.put.ncdf <- function( nc, varid, attname, attval, prec=NA,
 	# Get the netCDF function to call ... this always depends
 	# exclusively on the storage mode of the attval
 	#---------------------------------------------------------
-	if( storage.mode(attval) == "integer" ) 
+	if( storage.mode(attval) == "integer" )
 		funcname <- "R_nc_put_att_int"
 	else if( storage.mode(attval) == "double" )
 		funcname <- "R_nc_put_att_double"
@@ -1196,7 +1204,7 @@ att.put.ncdf <- function( nc, varid, attname, attval, prec=NA,
 	# type, in general, but can be manually overridden.
 	#-------------------------------------------------------------
 	atttypeShort <- 1  # These MUST match the values in the C code
-	atttypeInt   <- 2 
+	atttypeInt   <- 2
 	atttypeFloat <- 3
 	atttypeDbl   <- 4
 	atttypeText  <- 5
@@ -1213,8 +1221,8 @@ att.put.ncdf <- function( nc, varid, attname, attval, prec=NA,
 			{
 			if( isdimvar ) {
 				varidtouse <- nc$dim[[rvdim$name]]$dimvar
-				if( varidtouse == -1 ) 
-					prec <- storage.mode(attval) 
+				if( varidtouse == -1 )
+					prec <- storage.mode(attval)
 				else
 					prec <- nc$var[[varidtouse]]$prec
 				}
@@ -1252,7 +1260,7 @@ att.put.ncdf <- function( nc, varid, attname, attval, prec=NA,
 	rv <- .C(funcname,
 		as.integer(nc$id),
 		as.integer(varid-1),	# Change from R to C convention
-		as.character(attname), 
+		as.character(attname),
 		as.integer(typetocreate),
 		as.integer(length(attval)),
 		attval,
@@ -1273,7 +1281,7 @@ att.put.ncdf <- function( nc, varid, attname, attval, prec=NA,
 #
 varname.inq.ncdf <- function( nc, varid ) {
 
-	if( class(nc) != "ncdf" ) 
+	if( class(nc) != "ncdf" )
 		stop("Error: the first argument to varname.inq.ncdf (nc) is not of class ncdf!")
 
 	#------------------------------------------------------
@@ -1301,7 +1309,7 @@ varname.inq.ncdf <- function( nc, varid ) {
 # ID (an integer), a variable's name (a character string),
 # or an object of class 'var.ncdf'.  It returns an integer
 # variable id.  If the input varid is a NA, then we look to
-# see if there is only one var in the file, and return the 
+# see if there is only one var in the file, and return the
 # varid of that if true, and generate an error if false.
 # If "allowdimvar" is true, and if the passed string does not
 # match a variable's name, then we ALSO check if it matches
@@ -1354,7 +1362,7 @@ vobjtovarid <- function( nc, varid, verbose=FALSE, allowdimvar=TRUE) {
 			#--------------------------------------------
 			varidInteger <- -1
 			for( kk in 1:nc$nvars ) {
-				if( origvarid == nc$var[[kk]]$name ) 
+				if( origvarid == nc$var[[kk]]$name )
 					varidInteger <- nc$var[[kk]]$id
 				}
 
@@ -1378,7 +1386,7 @@ vobjtovarid <- function( nc, varid, verbose=FALSE, allowdimvar=TRUE) {
 							#---------------------
 							# Yes, it IS a dimvar!
 							#---------------------
-							varid <- nc$dim[[i]]$dimvarid 
+							varid <- nc$dim[[i]]$dimvarid
 							if( verbose )
 								print(paste("vobjtovarid: returning with DIMvarid deduced from name; varid=",varid))
 							return(varid)
@@ -1387,7 +1395,7 @@ vobjtovarid <- function( nc, varid, verbose=FALSE, allowdimvar=TRUE) {
 				print("vobjtovarid: error: I could not find the var whose name was passed in the file!")
 				print(paste("var name:",origvarid))
 				print(paste("file name:",nc$filename))
-				if( ! allowdimvar ) 
+				if( ! allowdimvar )
 					print("Note: I was NOT allowed to check to see if this was a dimvar name")
 				print(nc)
 				stop("Variable not found")
@@ -1411,7 +1419,7 @@ vobjtovarid <- function( nc, varid, verbose=FALSE, allowdimvar=TRUE) {
 				print(paste("Hint: make SURE the variable was not only defined with a call to def.var.ncdf, but also included in the list passed to create.var.ncdf"))
 				stop("stopping")
 				}
-			
+
 			if(verbose)
 				print(paste("vobjtovarid: returning varid=",varid,"  (OK=",varidOK,")"))
 			}
@@ -1444,7 +1452,7 @@ vobjtovarid <- function( nc, varid, verbose=FALSE, allowdimvar=TRUE) {
 #
 var.inq.ncdf <- function( nc, varid ) {
 
-	if( class(nc) != "ncdf" ) 
+	if( class(nc) != "ncdf" )
 		stop("Error: the first argument to var.inq.ncdf (nc) is not of class ncdf!")
 
 	#------------------------------------------------------
@@ -1475,7 +1483,7 @@ var.inq.ncdf <- function( nc, varid ) {
 		PACKAGE="ncdf")
 	if( rv$error != 0 )
 		stop("call to C function R_nc_inq_var failed")
-	
+
 	var       <- list()
 	var$id    <- varid
 	var$name  <- rv$name
@@ -1512,7 +1520,7 @@ var.inq.ncdf <- function( nc, varid ) {
 	else
 		var$units <- ""
 	attu <- att.get.ncdf( nc, varid, "long_name" )
-	if( attu$hasatt ) 
+	if( attu$hasatt )
 		var$longname <- attu$value
 	else
 		var$longname <- var$name
@@ -1531,7 +1539,7 @@ var.inq.ncdf <- function( nc, varid ) {
 #
 dim.inq.ncdf <- function( nc, dimid ) {
 
-	if( class(nc) != "ncdf" ) 
+	if( class(nc) != "ncdf" )
 		stop("Error: the first argument to dim.inq.ncdf (nc) is not of class ncdf!")
 
 	#------------------------------------------------------
@@ -1570,7 +1578,7 @@ dim.inq.ncdf <- function( nc, dimid ) {
 }
 
 #===============================================================
-# This returns the dimid of the unlimited dimension, or -1 if 
+# This returns the dimid of the unlimited dimension, or -1 if
 # there is NO unlimited dimension in the file.  The dimid is
 # returned in R conventional 1-based counting.
 #
@@ -1586,7 +1594,7 @@ unlimdim.ncdf <- function( nc ) {
 		unlimdimid=as.integer(rv$unlimdimid),
 		error=as.integer(rv$error),
 		PACKAGE="ncdf")
-	if( rv$error != 0 ) 
+	if( rv$error != 0 )
 		stop("unlimdim.ncdf returned error")
 
 	if( rv$unlimdimid != -1 )
@@ -1596,24 +1604,24 @@ unlimdim.ncdf <- function( nc ) {
 
 #=====================================================================================
 # This turns a passed 'var' object into the dimension name, IFF it refers to
-# a dimvar rather than a regular var.  
+# a dimvar rather than a regular var.
 # Return value:
 #	a list with logical 'isdim', and character string 'name'
 #
 vobjtodimname <- function( nc, varid, verbose=FALSE ) {
 
-	if( verbose ) 
+	if( verbose )
 		print(paste("entering vobjtodimname with varid=",varid))
 
 	if( (length(varid)==1) && is.na(varid)) {
-		if( verbose ) 
+		if( verbose )
 			print(paste("vobjtodimname: is NA"))
 		retval <- list()
 		retval$isdim <- FALSE
 		return(retval)
 		}
 
-	if( ((length(varid)>1)||! is.na(varid)) && (! is.numeric(varid))     && 
+	if( ((length(varid)>1)||! is.na(varid)) && (! is.numeric(varid))     &&
 	    (! is.character(varid)) && (! is.null(class(varid))) &&
 	    ( class(varid) == "dim.ncdf") ) {
 	    	if( verbose ) {
@@ -1627,7 +1635,7 @@ vobjtodimname <- function( nc, varid, verbose=FALSE ) {
 		}
 
 	if( is.character(varid) ) {
-		if( verbose ) 
+		if( verbose )
 			print(paste("vobjtodimname: is a character type varid.  This file has",nc$ndims,"dims"))
 		#----------------------------------------------------------------------
 		# See if this string is a dim's name (note carefully: NOT a var's name)
@@ -1646,22 +1654,22 @@ vobjtodimname <- function( nc, varid, verbose=FALSE ) {
 				}
 		}
 
-	if( verbose ) 
+	if( verbose )
 		print(paste("vobjtodimname: no cases found, returning FALSE"))
 
 	retval <- list()
 	retval$isdim <- FALSE
 	return(retval)
 }
-	
+
 #===============================================================
 # Writes a vector of values to a netCDF file.  'start' and 'count'
 # are given in R convention, i.e., starting at 1, and
 # in XYZT order.  If they are omitted, the full array is written.
 # 'varid' can be the variable's name, an object of class var.ncdf,
-# or the integer varid.  If varid is NA, then the "only" var in 
-# the file is assumed to be the selected one.  Values that are NA's 
-# in the input data are converted to that variable's 'missing_value' 
+# or the integer varid.  If varid is NA, then the "only" var in
+# the file is assumed to be the selected one.  Values that are NA's
+# in the input data are converted to that variable's 'missing_value'
 # attribute before being written out to the file.
 #
 put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FALSE ) {
@@ -1669,34 +1677,34 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 	if( class(nc) != "ncdf" )
 		stop("first argument is not of class ncdf!")
 
-	if( (length(vals)==1) && is.na(vals) ) 
+	if( (length(vals)==1) && is.na(vals) )
 		stop("requires a vals argument to be set, and not NA (to set a single NA, use c(NA))")
-		
+
 	if( verbose ) {
 		print(paste("put.var.ncdf: entering with filename",
 			nc$filename," and varid:"))
 		print(varid)
 		}
 
-	if( ! nc$writable ) 
+	if( ! nc$writable )
 		stop(paste("trying to write to file",nc$filename,"but it was not opened with write=TRUE"))
 
 	#-------------------------------------------------------------
-	# First check to see if we are ACTUALLY putting dimvar values.  
+	# First check to see if we are ACTUALLY putting dimvar values.
 	#-------------------------------------------------------------
 	if( verbose )
 		print('Checking to see if passed varid is ACTUALLY a dimension')
 	rvdim    <- vobjtodimname( nc, varid, verbose )
 	isdimvar <- rvdim$isdim
 	if( verbose ) {
-		if( isdimvar ) 
+		if( isdimvar )
 			print('...YES, passed obj WAS a dimension')
 		else
 			print('...NO, passed obj was NOT a dimension')
 		}
 
 	if( isdimvar ) {
-		if(verbose) print("put.var.ncdf: putting values to a DIMVAR") 
+		if(verbose) print("put.var.ncdf: putting values to a DIMVAR")
 		varid <- nc$dim[[rvdim$name]]$dimvarid
 		if( is.null(varid) || (varid == -1)) {
 			print("put.var.ncdf: error -- trying to write values to a dimvar, BUT the file does not have the")
@@ -1727,15 +1735,15 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 		start <- rep(1,ndims)	# Note: use R convention for now
 	else
 		{
-		if( length(start) != ndims ) 
+		if( length(start) != ndims )
 			stop(paste("'start' should specify",ndims,
 				"dims but actually specifies",length(start)))
 		}
-	if( (length(count)==1) && is.na(count)) 
-		count <- varsize - start + 1	
+	if( (length(count)==1) && is.na(count))
+		count <- varsize - start + 1
 	else
 		{
-		if( length(count) != ndims ) 
+		if( length(count) != ndims )
 			stop(paste("'count' should specify",ndims,
 				"dims but actually specifies",length(count)))
 		count <- ifelse( (count == -1), varsize-start+1, count)
@@ -1766,14 +1774,14 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 		print(paste("Putting var of type",precint," (1=short, 2=int, 3=float, 4=double, 5=char, 6=byte)"))
 
 	#----------------------------------------------------------
-	# Sanity check to make sure we have at least as many values 
+	# Sanity check to make sure we have at least as many values
 	# in the data array as we are writing.  Chars are a special
 	# case because typically they are defined with an extra
 	# "nchar" dim that is not included in the passed array.
 	#----------------------------------------------------------
 	n2write <- prod(count)
 	if( (precint != 5) && (length(vals) != n2write)) {
-		if( length(vals) > n2write ) 
+		if( length(vals) > n2write )
 			print(paste("put.var.ncdf: warning: you asked to write",n2write,
 				"values, but the passed data array has",length(vals),
 				"entries!"))
@@ -1796,7 +1804,7 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 		#--------------------
 		# Short, Int, or Byte
 		#--------------------
-		rv <- .C("R_nc_put_vara_int", 
+		rv <- .C("R_nc_put_vara_int",
 			as.integer(nc$id),
 			as.integer(varid-1),	# Switch from R to C convention
 			as.integer(c.start),	# Already switched to C convention...
@@ -1804,7 +1812,7 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 			data=as.integer(vals),
 			error=as.integer(rv$error),
 			PACKAGE="ncdf")
-		if( rv$error != 0 ) 
+		if( rv$error != 0 )
 			stop("C function R_nc_put_var_int returned error")
 		}
 
@@ -1812,7 +1820,7 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 		#----------------
 		# Float or double
 		#----------------
-		rv <- .C("R_nc_put_vara_double", 
+		rv <- .C("R_nc_put_vara_double",
 			as.integer(nc$id),
 			as.integer(varid-1),	# Switch from R to C convention
 			as.integer(c.start),	# Already switched to C convention...
@@ -1820,7 +1828,7 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 			data=as.double(vals),
 			error=as.integer(rv$error),
 			PACKAGE="ncdf")
-		if( rv$error != 0 ) 
+		if( rv$error != 0 )
 			stop("C function R_nc_put_var_double returned error")
 		}
 
@@ -1828,7 +1836,7 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 		#----------
 		# Character
 		#----------
-		rv <- .C("R_nc_put_vara_text", 
+		rv <- .C("R_nc_put_vara_text",
 			as.integer(nc$id),
 			as.integer(varid-1),	# Switch from R to C convention
 			as.integer(c.start),	# Already switched to C convention...
@@ -1836,7 +1844,7 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 			data=as.character(vals),
 			error=as.integer(rv$error),
 			PACKAGE="ncdf")
-		if( rv$error != 0 ) 
+		if( rv$error != 0 )
 			stop("C function R_nc_put_var_double returned error")
 		}
 
@@ -1852,12 +1860,12 @@ put.var.ncdf <- function( nc, varid=NA, vals=NA, start=NA, count=NA, verbose=FAL
 # or the integer varid.  'varid' can also be omitted entirely,
 # in which case the only variable in the file is identified and
 # that one read in (if no such variable can be identified, an
-# error is generated).  The 'count' array can have -1's, which 
+# error is generated).  The 'count' array can have -1's, which
 # indicate that all the values in that dim are to be read (subject
 # to the start array).  Missing values in the source file (i.e.,
 # values that match that variable's 'missing_value' attribute)
 # are set to NA's.
-# Argument 'signedbyte' can be TRUE for bytes to be interpreted as 
+# Argument 'signedbyte' can be TRUE for bytes to be interpreted as
 # signed, or FALSE to be unsigned.
 #
 get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signedbyte=TRUE, forcevarid=NA ) {
@@ -1887,9 +1895,9 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 
 	if( is.na(forcevarid) ) {
 		#-------------------------------------------------------------
-		# First check to see if we are ACTUALLY getting dimvar values.  
+		# First check to see if we are ACTUALLY getting dimvar values.
 		#-------------------------------------------------------------
-		if( verbose ) 
+		if( verbose )
 			print("checking to see if passed varid is actually a dimvar")
 		rvdim    <- vobjtodimname( nc, varid, verbose )
 		isdimvar <- rvdim$isdim
@@ -1928,7 +1936,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 		isdimvar <- TRUE
 		}
 
-	if( verbose ) 
+	if( verbose )
 		print(paste("get.var.ncdf: ending up using varid=",varid))
 	varsize <- varsize.ncdf ( nc, varid )
 	ndims   <- varndims.ncdf( nc, varid )
@@ -1950,7 +1958,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 		if( ! have_start )
 			start <- rep(1,ndims)	# Note: use R convention for now
 		if( ! have_count )
-			count <- varsize - start + 1	
+			count <- varsize - start + 1
 		else
 			{
 			#------------------
@@ -1967,9 +1975,9 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 		}
 
 	if( ndims > 0 ) {
-		if( length(start) != ndims ) 
+		if( length(start) != ndims )
 			stop(paste("Error: variable has",ndims,"dims, but start has",length(start),"entries.  They must match!"))
-		if( length(count) != ndims ) 
+		if( length(count) != ndims )
 			stop(paste("Error: variable has",ndims,"dims, but count has",length(count),"entries.  They must match!"))
 		}
 
@@ -1979,7 +1987,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 	totvarsize <- prod(count)
 	if( verbose )
 		print(paste("get.var.ncdf: totvarsize:",totvarsize))
-	
+
 	#------------------------------
 	# Switch from R to C convention
 	#------------------------------
@@ -2000,7 +2008,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 		# Short, Int, or Byte
 		#--------------------
 		rv$data  <- integer(totvarsize)
-		rv <- .C("R_nc_get_vara_int", 
+		rv <- .C("R_nc_get_vara_int",
 			as.integer(nc$id),
 			as.integer(varid-1),	# Switch from R to C convention
 			as.integer(c.start),	# Already switched to C convention...
@@ -2010,7 +2018,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 			error=as.integer(rv$error),
 			PACKAGE="ncdf",
 			DUP=FALSE)
-		if( rv$error != 0 ) 
+		if( rv$error != 0 )
 			stop("C function R_nc_get_var_int returned error")
 		}
 	else if( (precint == 3) || (precint == 4)) {
@@ -2018,7 +2026,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 		# Float or double
 		#----------------
 		rv$data  <- double(totvarsize)
-		rv <- .C("R_nc_get_vara_double", 
+		rv <- .C("R_nc_get_vara_double",
 			as.integer(nc$id),
 			as.integer(varid-1),	# Switch from R to C convention
 			as.integer(c.start),	# Already switched to C convention...
@@ -2027,7 +2035,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 			error=as.integer(rv$error),
 			PACKAGE="ncdf",
 			DUP=FALSE)
-		if( rv$error != 0 ) 
+		if( rv$error != 0 )
 			stop("C function R_nc_get_vara_double returned error")
 		}
 	else if( precint == 5 ) {
@@ -2053,7 +2061,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 		rv$tempstore <- stor
 		rv$data      <- array(stordata, dim=strdim)
 
-		rv <- .C("R_nc_get_vara_text", 
+		rv <- .C("R_nc_get_vara_text",
 			as.integer(nc$id),
 			as.integer(varid-1),	# Switch from R to C convention
 			as.integer(c.start),	# Already switched to C convention...
@@ -2062,7 +2070,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 			data=as.character(rv$data),
 			error=as.integer(rv$error),
 			PACKAGE="ncdf")
-		if( rv$error != 0 ) 
+		if( rv$error != 0 )
 			stop("C function R_nc_get_var_text returned error")
 
 		dim(rv$data) <- strdim
@@ -2085,7 +2093,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 				count.nodegen <- append(count.nodegen, count[i])
 				foundone <- 1
 				}
-		if( foundone == 0 ) 
+		if( foundone == 0 )
 			dim(rv$data) <- (1)
 		else
 			{
@@ -2111,7 +2119,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 	# is NOT filled out for dimvars, so skip this if a dimvar
 	#----------------------------------------------------------
 	if( (!isdimvar) && (precint != 5)) {
-		if( verbose ) 
+		if( verbose )
 			print("get.var.ncdf: setting missing values to NA")
 		if( (precint==1) || (precint==2)) {
 			#---------------------
@@ -2142,7 +2150,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 	# Implement add_offset and scale_factor
 	#--------------------------------------
 	if( ! isdimvar ) {
-		if( verbose ) 
+		if( verbose )
 			print(paste("get.var.ncdf: implementing add_offset (",
 				nc$var[[ nc$varid2Rindex[varid] ]]$hasAddOffset,
 				") and scale_factor (",
@@ -2189,7 +2197,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 # class "var.ncdf") if you want this info.
 #
 varsize.ncdf <- function( nc, varid ) {
-	
+
 	if( class(nc) != "ncdf" )
 		stop("the first passed argument (nc) does not have class ncdf!")
 
@@ -2206,7 +2214,7 @@ varsize.ncdf <- function( nc, varid ) {
 		varsize=as.integer(rv$varsize),
 		error=as.integer(rv$error),
 		PACKAGE="ncdf")
-	if( rv$error != 0 ) 
+	if( rv$error != 0 )
 		stop("error returned from C routine R_nc_varsize")
 
 	#-------------------------------------
@@ -2228,13 +2236,13 @@ vartype.ncdf <- function( nc, varid ) {
 	rv$error   <- -1
 	rv$precint <- -1
 
-	rv <- .C("R_nc_inq_vartype", 
+	rv <- .C("R_nc_inq_vartype",
 		as.integer(nc$id),
 		as.integer(varid-1),	# Switch from R to C convention
 		precint=as.integer(rv$precint),
 		error=as.integer(rv$error),
 		PACKAGE="ncdf")
-	if( rv$error != 0 ) 
+	if( rv$error != 0 )
 		stop("error returned from C call")
 	return( rv$precint )
 }
@@ -2246,13 +2254,13 @@ varndims.ncdf <- function( nc, varid ) {
 	rv <- list()
 	rv$error <- -1
 	rv$ndims <- -1
-	rv <- .C("R_nc_inq_varndims", 
+	rv <- .C("R_nc_inq_varndims",
 		as.integer(nc$id),
 		as.integer(varid-1),	# Switch from R to C convention
 		ndims=as.integer(rv$ndims),
 		error=as.integer(rv$error),
 		PACKAGE="ncdf")
-	if( rv$error != 0 ) 
+	if( rv$error != 0 )
 		stop("error returned from C call")
 	return( rv$ndims )
 }
@@ -2274,7 +2282,7 @@ redef.ncdf <- function( nc ) {
 dimid.inq.ncdf <- function( nc, dimname ) {
 	rv       <- list()
 	rv$dimid <- -1
-	rv <- .C("R_nc_inq_dimid", 
+	rv <- .C("R_nc_inq_dimid",
 		as.integer(nc$id),
 		as.character(dimname),
 		dimid=as.integer(rv$dimid),
@@ -2291,7 +2299,7 @@ dimid.inq.ncdf <- function( nc, dimname ) {
 varid.inq.ncdf <- function( nc, varname ) {
 	rv       <- list()
 	rv$varid <- -1
-	rv <- .C("R_nc_inq_varid", 
+	rv <- .C("R_nc_inq_varid",
 		as.integer(nc$id),
 		as.character(varname),
 		varid=as.integer(rv$varid),
@@ -2357,7 +2365,7 @@ close.ncdf <- function( con, ... ) {
 #att.put.ncdf( ncidnew, dblvar, "floatattforce", 3., prec="single" )
 #att.put.ncdf( ncidnew, intvar, "dblattforce", 3., prec="double" )
 #
-#att.put.ncdf( ncidnew, intvar, "textxtt", "This is a tesst attribute") 
+#att.put.ncdf( ncidnew, intvar, "textxtt", "This is a tesst attribute")
 #att.put.ncdf( ncidnew, 0, "title", "This is a test TITLE global attribute")
 #
 #close.ncdf(ncidnew)
