@@ -2016,8 +2016,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 			as.integer(byte_style), # 1=signed, 2=unsigned
 			data=as.integer(rv$data),
 			error=as.integer(rv$error),
-			PACKAGE="ncdf",
-			DUP=FALSE)
+			PACKAGE="ncdf")
 		if( rv$error != 0 )
 			stop("C function R_nc_get_var_int returned error")
 		}
@@ -2033,8 +2032,7 @@ get.var.ncdf <- function( nc, varid=NA, start=NA, count=NA, verbose=FALSE, signe
 			as.integer(c.count),	# Already switched to C convention...
 			data=as.double(rv$data),
 			error=as.integer(rv$error),
-			PACKAGE="ncdf",
-			DUP=FALSE)
+			PACKAGE="ncdf")
 		if( rv$error != 0 )
 			stop("C function R_nc_get_vara_double returned error")
 		}

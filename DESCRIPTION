@@ -1,7 +1,7 @@
 Package: ncdf
 Title: Interface to Unidata netCDF data files
 Maintainer: Brian Ripley <ripley@stats.ox.ac.uk>
-Version: 1.6.7
+Version: 1.6.8
 Author: David Pierce <dpierce@ucsd.edu>
 Description: This package provides a high-level R interface to
         Unidata's netCDF data files, which are portable across
@@ -31,7 +31,7 @@ Description: This package provides a high-level R interface to
         you do as well.  I may require this in a future release, as it
         seems to cause people problems.
 License: GPL (>= 2)
-Packaged: 2014-06-16 11:56:32 UTC; ripley
+Packaged: 2014-08-25 13:18:47 UTC; ripley
 NeedsCompilation: yes
 Repository: CRAN
-Date/Publication: 2014-06-16 14:07:25
+Date/Publication: 2014-08-25 20:40:18
