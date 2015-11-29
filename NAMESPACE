@@ -8,3 +8,5 @@ export(att.get.ncdf, att.put.ncdf, blankstring.ncdf, close.ncdf,
        var.def.ncdf, var.inq.ncdf, varid.inq.ncdf, varid.to.missing.value,
        varname.inq.ncdf, varndims.ncdf, varsize.ncdf, vartype.ncdf,
        version.ncdf, vobjtodimname, vobjtovarid)
+
+S3method(print, ncdf)

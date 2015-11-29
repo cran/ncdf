@@ -935,7 +935,7 @@ dim.create.ncdf <- function( nc, d, verbose=FALSE ) {
 		if( dimvar$error != 0 )
 			stop("Error defining dimvar in routine dim.create.ncdf")
 		dimvar$id <- dimvar$id + 1	# Change from C to R convention
-		dimvarid  <- dimvar$id
+##		dimvarid  <- dimvar$id
 
 		#---------------------------------
 		# Put in the dimvals as specified.
@@ -2367,3 +2367,8 @@ close.ncdf <- function( con, ... ) {
 #att.put.ncdf( ncidnew, 0, "title", "This is a test TITLE global attribute")
 #
 #close.ncdf(ncidnew)
+
+.onAttach <- function(libname, pkgname)
+{
+    packageStartupMessage("Package 'ncdf' is deprecated and will be removed from CRAN shortly.", "\n", "Use instead package RNetCDF or ncdf4 (for Windows from CRANextras)")
+}
